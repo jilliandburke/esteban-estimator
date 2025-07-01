@@ -18,28 +18,30 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
     )
 
-    const { data, error: authError } = await supabaseClient.auth.admin.inviteUserByEmail(
-      payload.email,
-    )
+    const { data: createdUser, error: createUserError } =
+      await supabaseClient.auth.admin.createUser({
+        email: payload.email,
+        email_confirm: true,
+      })
 
-    if (authError) {
-      throw authError
+    if (createUserError) {
+      throw createUserError
     }
 
-    const { data: updatedUser, error } = await supabaseClient
+    const { data: updatedUser, error: updatedUserError } = await supabaseClient
       .from('profiles')
       .update({
         full_name: payload.name,
       })
-      .eq('id', data.user.id)
+      .eq('id', createdUser.user.id)
       .select()
 
-    if (error) {
-      throw error
+    if (updatedUserError) {
+      throw updatedUserError
     }
 
     const { error: userTeamError } = await supabaseClient.from('users_teams').insert({
-      user_id: data.user.id,
+      user_id: createdUser.user.id,
       team_id: payload.team.code,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -47,6 +49,14 @@ Deno.serve(async (req) => {
 
     if (userTeamError) {
       throw userTeamError
+    }
+
+    const { error: authError } = await supabaseClient.auth.admin.inviteUserByEmail(payload.email, {
+      redirectTo: `http://localhost:5173/account-setup?userId=${createdUser.user.id}`,
+    })
+
+    if (authError) {
+      throw authError
     }
 
     return new Response(
