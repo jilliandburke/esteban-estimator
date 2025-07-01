@@ -1,0 +1,370 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { supabase } from '@/lib/supabaseClient'
+import { useUserSessionStore } from '@/stores/userSession'
+import { useTeamsStore } from '@/stores/teams'
+import { useRouter } from 'vue-router'
+
+export type Story = {
+  id: number
+  uuid: string
+  title: string | null
+  description: string | null
+  shortcut_id: string | null
+  story_points: number | null
+  epic_id: string
+  estimation?: {
+    id: number
+    uuid: string
+    user_id: string
+    story_id: string
+    estimation: number | null
+    created_at: string
+    updated_at: string
+  }
+  created_at: string
+  updated_at: string
+}
+
+export type Epic = {
+  id: number
+  uuid: string
+  title: string | null
+  description: string | null
+  shortcut_id: string | null
+  link: string | null
+  team_id: string | null
+  completed_estimation_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type Estimation = {
+  id: number
+  uuid: string
+  title: string | null
+  description: string | null
+  shortcut_id: string | null
+  link: string | null
+  team_id: string | null
+  team_completed_estimation_at: string | null
+  userEstimationStatus: EstimationStatus
+  stories?: Story[]
+  storyCount?: number
+  created_at: string
+  updated_at: string
+}
+
+export enum EstimationStatus {
+  NOT_STARTED = 'Not Started',
+  IN_PROGRESS = 'In Progress',
+  COMPLETE = 'Complete',
+}
+
+export const useEstimationsStore = defineStore(
+  'estimations',
+  () => {
+    const estimations = ref<Estimation[]>([])
+    const stories = ref<Story[]>([])
+    const getEstimationsError = ref<string | null>(null)
+    const router = useRouter()
+
+    const remainingEstimations = computed(() => {
+      return estimations.value.filter(
+        (item) => item.userEstimationStatus !== EstimationStatus.COMPLETE,
+      )
+    })
+
+    const completedEstimations = computed(() => {
+      return estimations.value.filter(
+        (item) =>
+          item.team_completed_estimation_at ||
+          item.userEstimationStatus === EstimationStatus.COMPLETE,
+      )
+    })
+
+    async function getRemainingEstimations() {
+      let error
+      let mappedEstimations: Estimation[]
+      const user = useUserSessionStore().currentUser
+
+      if (!user) return
+
+      const teamIds = [...new Set(user.teams.map((team) => team.uuid))]
+
+      if (!teamIds) return
+
+      const { data: epicData, error: epicError } = await supabase
+        .from('epics')
+        .select()
+        .in('team_id', teamIds as string[])
+        .order('updated_at', { ascending: false })
+
+      if (epicError) error = epicError
+
+      if (epicData) {
+        mappedEstimations = epicData
+
+        for (const estimation of mappedEstimations) {
+          const { data: storiesData, error: storiesError } = await supabase
+            .from('stories')
+            .select()
+            .eq('epic_id', estimation.uuid)
+
+          if (storiesError) {
+            error = storiesError
+            return
+          }
+
+          const completedEstimation = await hasUserCompletedEstimation(estimation.uuid)
+
+          estimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
+
+          if (storiesData) estimation.stories = storiesData
+        }
+
+        mappedEstimations.map(
+          (estimation: Estimation) => (estimation.storyCount = estimation?.stories?.length),
+        )
+      }
+
+      if (error) {
+        getEstimationsError.value = error.message
+        return
+      }
+
+      estimations.value = mappedEstimations
+    }
+
+    async function hasUserCompletedEstimation(epicId: string) {
+      if (!epicId) {
+        console.log('No Epic ID supplied')
+        return
+      }
+
+      const storyCount = await getStoryCount(epicId)
+      const user = useUserSessionStore().currentUser
+      const { count, error } = await supabase
+        .from('estimations')
+        .select('*', { count: 'exact', head: true })
+        .eq('epic_id', epicId)
+        .eq('user_id', user?.id as string)
+
+      if (error) {
+        console.log('Error confirming user estimation count')
+        return
+      }
+
+      if (count === 0) {
+        return EstimationStatus.NOT_STARTED
+      } else if (count !== storyCount) {
+        return EstimationStatus.IN_PROGRESS
+      } else {
+        return EstimationStatus.COMPLETE
+      }
+    }
+
+    async function getEstimation(uuid: string) {
+      let mappedEstimation: Estimation
+
+      const { data: epicData, error: epicError } = await supabase
+        .from('epics')
+        .select()
+        .eq('uuid', uuid)
+        .single()
+
+      if (epicError) {
+        getEstimationsError.value = epicError.message
+        return
+      }
+
+      if (epicData) {
+        mappedEstimation = epicData
+
+        const completedEstimation = await hasUserCompletedEstimation(epicData.uuid)
+
+        mappedEstimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
+
+        const stories = await getStories(epicData.uuid)
+
+        if (stories) mappedEstimation.stories = stories
+
+        if (mappedEstimation?.stories)
+          mappedEstimation.storyCount = mappedEstimation?.stories.length
+      }
+
+      return mappedEstimation
+    }
+
+    async function getStories(epicId: string) {
+      const { data, error } = await supabase.from('stories').select().eq('epic_id', epicId)
+
+      if (error) {
+        return
+      }
+
+      const user = useUserSessionStore().currentUser
+
+      if (!user) return { data: null, error: 'No user found' }
+
+      const mappedStories: Story[] = data
+
+      if (mappedStories) {
+        for (const story of mappedStories) {
+          const { data } = await supabase
+            .from('estimations')
+            .select()
+            .eq('story_id', story.uuid)
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+          if (data) {
+            story.estimation = data
+          }
+        }
+      }
+
+      stories.value = data
+      return data
+    }
+
+    async function getStoryCount(epicId: string) {
+      const { count, error } = await supabase
+        .from('stories')
+        .select('*', { count: 'exact', head: true })
+        .eq('epic_id', epicId)
+
+      if (error) return
+
+      return count
+    }
+
+    async function submitStoryEstimation(storyId: string, epicId: string, estimation: number) {
+      const user = useUserSessionStore().currentUser
+
+      if (!user) return { data: null, error: 'No user found' }
+
+      const { data: teamIdData, error: teamError } = await supabase
+        .from('epics')
+        .select('team_id')
+        .eq('uuid', epicId)
+        .maybeSingle()
+
+      if (teamError) return { data: null, error: teamError }
+      if (!teamIdData) return { data: null, error: 'No team_id found' }
+
+      const { data, error } = await supabase
+        .from('estimations')
+        .upsert(
+          {
+            user_id: user.id,
+            story_id: storyId,
+            epic_id: epicId,
+            team_id: teamIdData?.team_id,
+            estimation,
+            estimation_submitted: true,
+          },
+          { onConflict: 'story_id, user_id', ignoreDuplicates: false },
+        )
+        .select()
+        .maybeSingle()
+
+      // Add estimation to story in stories array
+      if (data) {
+        stories.value.map((story) => {
+          if (story.uuid === storyId) {
+            story.estimation = data
+          }
+        })
+      }
+
+      return { data, error }
+    }
+
+    async function finishEstimation(epicId: string) {
+      // Check if all members of the team have submitted their estimations
+      const hasBeenCompleted = await useTeamsStore().hasTeamCompletedEstimation(epicId)
+
+      if (!hasBeenCompleted) {
+        // Just exit back to dash without calculating averages
+        router.push({ path: '/' })
+      } else {
+        // If we have all the estimations we expect, start getting the averages
+
+        // Collect team to get all estimations by team
+        const { data: team, error: teamError } = await useTeamsStore().getTeamByEpicId(epicId)
+
+        if (teamError) {
+          console.log('Error getting team', teamError)
+          return
+        }
+        if (!team) {
+          console.log('No team found')
+          return
+        }
+
+        // Get all estimations done by this team for this epic
+        const { data: estimations, error } = await supabase
+          .from('estimations')
+          .select()
+          .eq('epic_id', epicId)
+          .eq('team_id', team.uuid)
+          .order('story_id')
+
+        if (error) {
+          console.log('Error getting estimations', error)
+          return
+        }
+
+        // Get unique story IDs so we can iterate on the estimations by storyId to collect estimation
+        // averages
+        const uniqueStoryIds = [...new Set(estimations.map((item) => item.story_id))]
+
+        for (const storyId of uniqueStoryIds) {
+          const stories = estimations.filter((item) => item.story_id === storyId)
+          const sum = stories.reduce((prev, story) => {
+            return prev + story.estimation
+          }, 0)
+          const average = Math.round(sum / stories.length)
+
+          const { error: storyUpdateError } = await supabase
+            .from('stories')
+            .update({ story_points: average })
+            .eq('uuid', storyId)
+            .select()
+
+          if (storyUpdateError) {
+            console.log('Error saving average', storyUpdateError)
+            return
+          }
+        }
+
+        const { error: epicUpdateError } = await supabase
+          .from('epics')
+          .update({ team_completed_estimation_at: new Date().toISOString() })
+          .eq('uuid', epicId)
+
+        if (epicUpdateError) {
+          console.log('Error updating epic', epicUpdateError)
+        }
+
+        router.push({ path: '/' })
+      }
+    }
+
+    return {
+      getRemainingEstimations,
+      remainingEstimations,
+      completedEstimations,
+      estimations,
+      stories,
+      getEstimationsError,
+      getEstimation,
+      getStoryCount,
+      hasUserCompletedEstimation,
+      submitStoryEstimation,
+      finishEstimation,
+    }
+  },
+  { persist: true },
+)

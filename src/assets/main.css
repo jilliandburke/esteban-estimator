@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import 'tailwindcss-primeui';
+@import 'primeicons/primeicons.css';
+@custom-variant dark (&:where(.p-dark, .p-dark *));
+
+h1 {
+  font-weight: bold;
+  line-height: 1.8rem;
+  margin-top: 1rem;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}

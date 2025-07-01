@@ -1,0 +1,61 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useEstimationsStore, type Story } from '@/stores/estimations'
+
+const route = useRoute()
+const router = useRouter()
+const estimationStore = useEstimationsStore()
+const stories = ref<Story[]>(estimationStore.stories)
+
+function goToPreviousStory() {
+  router.push({
+    path: `/estimation/${route.params.epicId}/story/${
+      stories.value[stories.value.length - 1].uuid
+    }`,
+  })
+
+  return
+}
+</script>
+
+<template>
+  <div class="flex h-full p-10 mx-6 justify-center">
+    <div class="flex flex-col gap-4">
+      <h3 class="font-bold text-2xl pl-4">Review Estimates</h3>
+      <Panel v-if="stories">
+        <template #header>
+          <div class="flex flex-col w-full -mb-6">
+            <h4 class="font-bold text-xl mb-0">Stories</h4>
+            <Divider />
+          </div>
+        </template>
+        <DataTable :value="stories" size="large" tableStyle="min-width: 50rem">
+          <Column header="ID">
+            <template #body="slotProps">
+              <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
+            </template>
+          </Column>
+          <Column field="title" header="Title"></Column>
+          <Column field="description" header="Description"></Column>
+          <Column field="story_points" header="My Estimations">
+            <template #body="slotProps">
+              {{ slotProps.data.estimation.estimation || 0 }}
+            </template>
+          </Column>
+        </DataTable>
+      </Panel>
+    </div>
+    <div
+      class="absolute flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+    >
+      <div class="flex gap-4">
+        <Button severity="secondary" @click="goToPreviousStory"> Back </Button>
+        <Button @click="estimationStore.finishEstimation(stories[0].epic_id)"> Submit </Button>
+        <!-- <Button v-if="nextStory || (readyForReview && isLastStory)" @click="goToNextStory"> -->
+        <!--   {{ nextStory ? 'Next' : 'Review' }} -->
+        <!-- </Button> -->
+      </div>
+    </div>
+  </div>
+</template>
