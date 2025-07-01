@@ -20,7 +20,7 @@ function closeNewTeamDialog() {
 <template>
   <div class="flex p-6 gap-20">
     <div class="flex flex-col flex-wrap w-full gap-14">
-      <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-8 w-full">
         <div class="flex gap-8 items-center">
           <h3 class="font-bold text-xl">Users</h3>
           <Button
@@ -34,7 +34,13 @@ function closeNewTeamDialog() {
             @closeDialog="closeUserInviteDialog"
           />
         </div>
-        <DataTable :value="userSessionStore.listAllUsers" tableStyle="min-width: 50rem">
+        <DataTable
+          :value="userSessionStore.listAllUsers"
+          scrollable
+          resizableColumns
+          columnResizeMode="expand"
+          tableStyle="min-width: 50rem"
+        >
           <Column field="full_name" header="Name"></Column>
           <Column field="email" header="Email"></Column>
           <Column field="teams" header="Team">
@@ -47,7 +53,7 @@ function closeNewTeamDialog() {
         </DataTable>
       </div>
 
-      <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-8 w-full">
         <div class="flex gap-8 items-center">
           <h3 class="font-bold text-xl">Teams</h3>
           <Button
@@ -58,7 +64,7 @@ function closeNewTeamDialog() {
           />
           <NewTeam :showNewTeamDialog="showNewTeamDialog" @closeDialog="closeNewTeamDialog" />
         </div>
-        <DataTable :value="teamsStore.teamList" tableStyle="min-width: 50rem">
+        <DataTable :value="teamsStore.teamList" scrollable tableStyle="min-width: 50rem">
           <Column field="name" header="Name">
             <template #body="slotProps">
               <span class="capitalize">

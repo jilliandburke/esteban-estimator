@@ -24,6 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
   const teamStore = useTeamsStore()
   const settingsStore = useSettingsStore()
   const pointScaleStore = usePointScaleStore()
+  const loginLoading = ref(false)
 
   function resetLoginError() {
     loginError.value = null
@@ -38,6 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
     values: { email: string; password: string }
   }) {
     if (formEvent.valid) {
+      loginLoading.value = true
       const { error } = await supabase.auth.signInWithPassword({
         email: formEvent.values.email,
         password: formEvent.values.password,
@@ -58,6 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
         // Reset errors and push to the Dashboard
         resetLoginError()
         router.push('/')
+        loginLoading.value = false
       }
     }
   }
@@ -75,5 +78,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { loginError, signIn, signOut }
+  return { loginError, loginLoading, signIn, signOut }
 })

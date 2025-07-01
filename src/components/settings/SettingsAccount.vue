@@ -66,13 +66,13 @@ const onFormSubmit = async ({ valid, values }) => {
 </script>
 
 <template>
-  <div class="flex p-6 gap-10">
+  <div class="flex p-6 gap-10 w-full">
     <Form
       v-slot="$form"
       :initialValues
       :resolver
       @submit="onFormSubmit"
-      class="flex flex-col gap-4 w-full sm:w-56 md:w-1/2"
+      class="flex flex-col gap-4 w-full lg:w-1/2"
     >
       <!-- Name -->
       <div class="flex flex-col gap-1">
@@ -111,7 +111,7 @@ const onFormSubmit = async ({ valid, values }) => {
           $form.theme?.error?.message
         }}</Message>
       </div>
-      <Button type="submit" label="Save Changes" :loading="loading" class="w-1/3 mt-6" />
+      <Button type="submit" label="Save Changes" :loading="loading" class="md:w-1/3 mt-6" />
     </Form>
 
     <!-- FIX/IMPLEMENT USER AVATAR UPLOAD LATER -->

@@ -155,7 +155,7 @@ function toggleApiKeyVisibility() {
         :initialValues="estimationFormInitialValues"
         :resolver="estimationResolver"
         @submit="onEstimationFormSubmit"
-        class="flex flex-col gap-4 w-full max-w-1/2"
+        class="flex flex-col gap-4 w-full lg:max-w-1/2"
       >
         <h3 class="font-bold text-xl">Estimation</h3>
         <!-- Point Scale -->
@@ -220,7 +220,7 @@ function toggleApiKeyVisibility() {
           type="submit"
           label="Save Changes"
           :loading="submittingEstimation"
-          class="w-1/3 mt-6"
+          class="md:w-1/3 mt-6"
         />
       </Form>
 
@@ -230,70 +230,85 @@ function toggleApiKeyVisibility() {
           :initialValues="shortcutFormInitialValues"
           :resolver="shortcutResolver"
           @submit="onShortcutFormSubmit"
-          class="flex flex-col gap-4 w-full max-w-1/2"
+          class="flex flex-col gap-4 w-full"
         >
-          <h3 class="font-bold text-xl">Shortcut</h3>
-          <!-- Estimation Shortcut Label ID -->
-          <div class="flex flex-col gap-1">
-            <label for="name">Label ID</label>
-            <InputText
-              name="labelId"
-              type="number"
-              placeholder="Label ID"
-              :disabled="submittingShortcut"
-              fluid
-            />
-            <Message size="small" severity="secondary" variant="simple"
-              >This can be found in the URL of the label on Shortcut</Message
-            >
-            <Message v-if="$form.labelId?.invalid" severity="error" size="small" variant="simple">{{
-              $form.labelId.error?.message
-            }}</Message>
-          </div>
+          <div class="flex flex-col md:flex-row gap-10 w-full">
+            <div class="flex flex-col gap-4 md:w-1/2 lg:gap-10">
+              <div class="flex flex-col gap-4">
+                <h3 class="font-bold text-xl">Shortcut</h3>
 
-          <!--Shortcut API Key -->
-          <div class="flex flex-col gap-1">
-            <label for="name">API Key</label>
-            <InputGroup>
-              <InputText
-                name="apiKey"
-                :type="apiKeyFormType"
-                placeholder="API Key"
-                :disabled="submittingShortcut"
-                fluid
-              />
-              <InputGroupAddon>
-                <!-- TODO - implement show/hide -->
-                <Button
-                  :icon="visibilityIcon"
-                  severity="secondary"
-                  @click="toggleApiKeyVisibility"
-                />
-              </InputGroupAddon>
-            </InputGroup>
-            <Message v-if="$form.apiKey?.invalid" severity="error" size="small" variant="simple">{{
-              $form.apiKey.error?.message
-            }}</Message>
+                <!-- Estimation Shortcut Label ID -->
+                <div class="flex flex-col gap-1">
+                  <label for="name">Label ID</label>
+                  <InputText
+                    name="labelId"
+                    type="number"
+                    placeholder="Label ID"
+                    :disabled="submittingShortcut"
+                    fluid
+                  />
+                  <Message size="small" severity="secondary" variant="simple"
+                    >This can be found in the URL of the label on Shortcut</Message
+                  >
+                  <Message
+                    v-if="$form.labelId?.invalid"
+                    severity="error"
+                    size="small"
+                    variant="simple"
+                    >{{ $form.labelId.error?.message }}</Message
+                  >
+                </div>
+              </div>
+
+              <!--Shortcut API Key -->
+              <div class="flex flex-col gap-1">
+                <label for="name">API Key</label>
+                <InputGroup>
+                  <InputText
+                    name="apiKey"
+                    :type="apiKeyFormType"
+                    placeholder="API Key"
+                    :disabled="submittingShortcut"
+                    fluid
+                  />
+                  <InputGroupAddon>
+                    <!-- TODO - implement show/hide -->
+                    <Button
+                      :icon="visibilityIcon"
+                      severity="secondary"
+                      @click="toggleApiKeyVisibility"
+                    />
+                  </InputGroupAddon>
+                </InputGroup>
+                <Message
+                  v-if="$form.apiKey?.invalid"
+                  severity="error"
+                  size="small"
+                  variant="simple"
+                  >{{ $form.apiKey.error?.message }}</Message
+                >
+              </div>
+            </div>
+
+            <!-- Allows user to copy Shortcut Webhook URL -->
+            <div class="flex flex-col gap-2 w-full md:max-w-1/2 mt-0 md:mt-9.5">
+              <label for="theme">Webhook URL</label>
+              <InputGroup>
+                <InputText placeholder="Webhook URL" :value="webhookUrl" disabled />
+                <InputGroupAddon>
+                  <Button label="Copy" severity="secondary" @click="copyToClipboard" />
+                </InputGroupAddon>
+              </InputGroup>
+            </div>
           </div>
 
           <Button
             type="submit"
             label="Save Changes"
             :loading="submittingShortcut"
-            class="w-1/3 mt-6"
+            class="md:w-1/3 mt-6"
           />
         </Form>
-
-        <!-- Allows user to copy Shortcut Webhook URL -->
-        <div class="flex flex-col gap-2 w-full max-w-1/2 mt-9.5">
-          <label for="theme">Webhook URL</label>
-          <InputGroup>
-            <InputText placeholder="Webhook URL" :value="webhookUrl" disabled />
-            <InputGroupAddon>
-              <Button label="Copy" severity="secondary" @click="copyToClipboard" />
-            </InputGroupAddon>
-          </InputGroup>
-        </div>
       </div>
     </div>
   </div>

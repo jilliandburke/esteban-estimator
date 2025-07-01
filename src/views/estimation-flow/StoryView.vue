@@ -135,8 +135,8 @@ function goToPreviousStory() {
 
 <template>
   <div class="flex h-full p-10 mx-6 justify-center">
-    <div class="flex gap-10 flex-0 min-w-7xl">
-      <div class="flex flex-col gap-4 w-1/2">
+    <div class="flex flex-col md:flex-row md:gap-10 w-full max-w-7xl mb-30">
+      <div class="flex flex-col gap-4 md:w-1/2">
         <h3 class="font-bold text-2xl pl-4">Story Estimation</h3>
 
         <Panel v-if="story">
@@ -151,7 +151,7 @@ function goToPreviousStory() {
           </p>
         </Panel>
       </div>
-      <div class="flex flex-col gap-3 pl-4 mt-10 w-1/2">
+      <div class="flex flex-col gap-3 md:pl-4 mt-10 md:w-1/2">
         <h3 class="font-bold text-xl">Select your estimation</h3>
         <p>
           Use the radio buttons below to select your story point estimation for the card shown on
@@ -162,7 +162,7 @@ function goToPreviousStory() {
           v-for="estimation in estimationOptions"
           :key="estimation"
           :for="`${estimation}`"
-          class="flex rounded-lg border border-surface-200 dark:border-surface-700 p-2 gap-3 cursor-pointer items-center hover:bg-surface-100 hover:dark:bg-surface-900 focus:border-blue-800 has-checked:border-primary-400 max-w-1/3"
+          class="flex rounded-lg border border-surface-200 dark:border-surface-700 p-2 gap-3 cursor-pointer items-center hover:bg-surface-100 hover:dark:bg-surface-900 focus:border-blue-800 has-checked:border-primary-400 lg:max-w-1/3"
         >
           <RadioButton
             v-model="selectedEstimation"
@@ -176,7 +176,7 @@ function goToPreviousStory() {
     </div>
     <div
       v-if="story"
-      class="absolute flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
     >
       <div class="flex gap-4">
         <Button severity="secondary" @click="goToPreviousStory"> Back </Button>

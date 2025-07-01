@@ -2,9 +2,9 @@
 
 <template>
   <div class="flex h-full p-10 mx-6 justify-center">
-    <div class="flex flex-col gap-10 flex-0 min-w-7xl">
+    <div class="flex flex-col gap-10 flex-1 w-full max-w-7xl">
       <h3 class="font-bold text-2xl pl-4">Settings</h3>
-      <Tabs value="0">
+      <Tabs value="0" scrollable>
         <TabList>
           <Tab value="0">Acccount</Tab>
           <Tab value="1">App Settings</Tab>

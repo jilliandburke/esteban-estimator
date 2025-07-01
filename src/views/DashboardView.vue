@@ -60,7 +60,7 @@ userSessionStore.getUser()
     <div class="flex flex-col gap-4">
       <h3 class="font-bold text-2xl">Completed Estimations</h3>
 
-      <div class="flex gap-6">
+      <div class="flex flex-wrap gap-6">
         <Card
           class="w-96 overflow-hidden"
           :pt="{ body: { class: 'flex flex-col justify-between h-full' } }"

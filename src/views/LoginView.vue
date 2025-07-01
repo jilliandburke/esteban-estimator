@@ -34,10 +34,12 @@ const resolver = zodResolver(
 </script>
 
 <template>
-  <div
-    class="bg-surface-50 dark:bg-surface-950 px-6 py-20 md:px-12 lg:px-20 h-dvh flex items-center"
-  >
+  <div class="px-6 py-20 md:px-12 lg:px-20 h-dvh flex items-center">
+    <div v-if="authStore.loginLoading" class="flex justify-center w-full">
+      <ProgressSpinner />
+    </div>
     <div
+      v-else
       class="bg-surface-0 dark:bg-surface-900 p-8 md:p-12 shadow-sm rounded-2xl w-full max-w-xl mx-auto flex flex-col gap-8"
     >
       <div class="flex flex-col items-center gap-4">
