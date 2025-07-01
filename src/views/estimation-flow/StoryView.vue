@@ -162,7 +162,7 @@ function goToPreviousStory() {
           v-for="estimation in estimationOptions"
           :key="estimation"
           :for="`${estimation}`"
-          class="flex rounded-lg border border-surface-200 dark:border-surface-700 p-2 gap-3 cursor-pointer items-center hover:bg-surface-100 hover:dark:bg-surface-900 focus:border-blue-800 has-checked:border-emerald-400 max-w-1/3"
+          class="flex rounded-lg border border-surface-200 dark:border-surface-700 p-2 gap-3 cursor-pointer items-center hover:bg-surface-100 hover:dark:bg-surface-900 focus:border-blue-800 has-checked:border-primary-400 max-w-1/3"
         >
           <RadioButton
             v-model="selectedEstimation"

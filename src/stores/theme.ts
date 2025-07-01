@@ -6,7 +6,7 @@ export const useThemeStore = defineStore('theme', () => {
   const root = document.getElementsByTagName('html')[0]
   const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)')
   const prefersLightTheme = window.matchMedia('(prefers-color-scheme: light)')
-  const currentTheme = ref<'system' | 'light' | 'dark'>('system')
+  const currentTheme = ref<'system' | 'light' | 'dark'>('dark')
   const userSessionStore = useUserSessionStore()
 
   function setSystemTheme() {

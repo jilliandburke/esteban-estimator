@@ -111,13 +111,7 @@ const onFormSubmit = async ({ valid, values }) => {
           $form.theme?.error?.message
         }}</Message>
       </div>
-      <Button
-        type="submit"
-        severity="success"
-        label="Save Changes"
-        :loading="loading"
-        class="w-1/3 mt-6"
-      />
+      <Button type="submit" label="Save Changes" :loading="loading" class="w-1/3 mt-6" />
     </Form>
 
     <!-- FIX/IMPLEMENT USER AVATAR UPLOAD LATER -->

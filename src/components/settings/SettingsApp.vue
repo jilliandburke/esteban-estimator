@@ -218,7 +218,6 @@ function toggleApiKeyVisibility() {
 
         <Button
           type="submit"
-          severity="success"
           label="Save Changes"
           :loading="submittingEstimation"
           class="w-1/3 mt-6"
@@ -279,7 +278,6 @@ function toggleApiKeyVisibility() {
 
           <Button
             type="submit"
-            severity="success"
             label="Save Changes"
             :loading="submittingShortcut"
             class="w-1/3 mt-6"
