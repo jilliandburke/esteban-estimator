@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserSessionStore } from '@/stores/userSession'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,20 @@ const router = createRouter({
       component: () => import('../views/LogoutView.vue'),
     },
   ],
+})
+
+router.beforeEach(async (to) => {
+  const userSessionStore = useUserSessionStore()
+
+  if (
+    // make sure the user is authenticated
+    !userSessionStore.isLoggedIn &&
+    // ❗️ Avoid an infinite redirect
+    to.name !== 'login'
+  ) {
+    // redirect the user to the login page
+    return { name: 'login' }
+  }
 })
 
 export default router
