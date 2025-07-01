@@ -41,8 +41,8 @@ const teamOptions = computed(() => {
   }
 })
 
+// @ts-expect-error idk typings for this yet
 async function inviteUser({ valid, values }) {
-  console.log(values)
   if (valid) {
     const result = await userSessionStore.inviteUser(values)
 

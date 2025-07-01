@@ -33,7 +33,10 @@ export const useAuthStore = defineStore('auth', () => {
     loginError.value = null
   }
 
-  async function signIn(formEvent: any) {
+  async function signIn(formEvent: {
+    valid: boolean
+    values: { email: string; password: string }
+  }) {
     if (formEvent.valid) {
       const { error } = await supabase.auth.signInWithPassword({
         email: formEvent.values.email,

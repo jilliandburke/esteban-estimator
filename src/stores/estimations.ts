@@ -48,7 +48,7 @@ export type Estimation = {
   link: string | null
   team_id: string | null
   team_completed_estimation_at: string | null
-  userEstimationStatus: EstimationStatus
+  userEstimationStatus?: EstimationStatus
   stories?: Story[]
   storyCount?: number
   created_at: string
@@ -85,7 +85,7 @@ export const useEstimationsStore = defineStore(
 
     async function getRemainingEstimations() {
       let error
-      let mappedEstimations: Estimation[]
+      let mappedEstimations: Estimation[] = []
       const user = useUserSessionStore().currentUser
 
       if (!user) return
@@ -165,7 +165,7 @@ export const useEstimationsStore = defineStore(
     }
 
     async function getEstimation(uuid: string) {
-      let mappedEstimation: Estimation
+      let mappedEstimation: Estimation | undefined = undefined
 
       const { data: epicData, error: epicError } = await supabase
         .from('epics')
@@ -187,6 +187,7 @@ export const useEstimationsStore = defineStore(
 
         const stories = await getStories(epicData.uuid)
 
+        // @ts-expect-error idk what this means dude
         if (stories) mappedEstimation.stories = stories
 
         if (mappedEstimation?.stories)

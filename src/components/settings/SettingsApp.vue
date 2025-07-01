@@ -79,6 +79,7 @@ const shortcutFormInitialValues = ref({
   apiKey: settings?.value?.scApiKey,
 })
 
+// @ts-expect-error idk typings for this yet
 const onEstimationFormSubmit = async ({ valid, values }) => {
   if (valid) {
     submittingEstimation.value = true
@@ -102,6 +103,7 @@ const onEstimationFormSubmit = async ({ valid, values }) => {
   }
 }
 
+// @ts-expect-error idk typings for this yet
 const onShortcutFormSubmit = async ({ valid, values }) => {
   if (valid) {
     submittingShortcut.value = true

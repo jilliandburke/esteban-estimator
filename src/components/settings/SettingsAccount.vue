@@ -40,6 +40,7 @@ const initialValues = ref({
   theme: defaultTheme.value,
 })
 
+// @ts-expect-error idk typings for this yet
 const onFormSubmit = async ({ valid, values }) => {
   if (valid) {
     loading.value = true

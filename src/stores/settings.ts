@@ -70,7 +70,13 @@ export const useSettingsStore = defineStore(
       }
     }
 
-    async function updateSettings(updateData: any) {
+    async function updateSettings(updateData: {
+      pointScale?: string
+      team?: string
+      requireReview?: boolean
+      labelId?: number
+      apiKey?: string
+    }) {
       if (updateData && settings.value) {
         const settingsId = settings.value.id
         let updateError = null

@@ -30,7 +30,7 @@ const profileItems = ref([
   },
 ])
 
-const toggle = (event: any) => {
+const toggle = (event: unknown) => {
   menu.value.toggle(event)
 }
 </script>
