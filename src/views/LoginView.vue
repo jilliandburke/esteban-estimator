@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import Checkbox from 'primevue/checkbox'
-import InputText from 'primevue/inputtext'
-import Button from 'primevue/button'
-import { Form } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { ref } from 'vue'
@@ -58,7 +54,7 @@ const resolver = zodResolver(
         >
           <div class="flex flex-col gap-2 w-full">
             <label
-              for="email1"
+              for="email"
               class="text-surface-900 dark:text-surface-0 font-medium leading-normal"
               >Email Address</label
             >
