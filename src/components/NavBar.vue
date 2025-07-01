@@ -40,7 +40,7 @@ const toggle = (event: unknown) => {
 <template>
   <Menubar :model="navItems" class="px-10">
     <template #start>
-      <Image src="/src/assets/logo.svg" alt="Image" width="100" class="mr-3" />
+      <Image src="./src/assets/logo.svg" alt="Image" width="100" />
     </template>
     <template #item="{ item, props }">
       <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>

@@ -41,7 +41,7 @@ const resolver = zodResolver(
     >
       <div class="flex flex-col items-center gap-4">
         <div class="flex items-center gap-4">
-          <Image src="/src/assets/logo.svg" alt="Image" width="200" />
+          <Image src="./src/assets/logo.svg" alt="Image" width="250" />
         </div>
       </div>
       <div class="flex flex-col gap-6 w-full">
