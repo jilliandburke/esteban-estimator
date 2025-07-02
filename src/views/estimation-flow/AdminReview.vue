@@ -10,7 +10,6 @@ const route = useRoute()
 const estimationStore = useEstimationsStore()
 const estimation = ref<Estimation | undefined>(undefined)
 const toast = useToast()
-const isReview = ref(route.query.review === 'true')
 const stories = ref<Story[]>([])
 const expandedRows = ref({})
 const loading = ref(estimation.value === undefined)
@@ -24,7 +23,6 @@ onMounted(async () => {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Estimation not found', life: 3000 })
     } else {
       const allStories = await estimationStore.getStoriesWithAllEstimations(estimation.value.uuid)
-      console.log('All stories:', allStories)
 
       if (allStories) {
         stories.value = allStories
@@ -34,13 +32,24 @@ onMounted(async () => {
     }
   }
 })
+
+async function submitToShortcut() {
+  const result = await estimationStore.submitEstimationToShortcut(stories.value)
+
+  if (result && result !== null) {
+    toast.add({ severity: 'danger', summary: `${result}`, life: 3000 })
+    return
+  }
+
+  toast.add({ severity: 'success', summary: 'User successfully invited', life: 3000 })
+}
 </script>
 
 <template>
   <div v-if="loading" class="flex justify-center mt-64">
     <ProgressSpinner />
   </div>
-  <div v-else class="flex h-full p-10 mx-6 justify-center">
+  <div v-else class="flex h-full p-10 mx-6 justify-center mb-40">
     <div class="flex flex-col gap-10 w-full max-w-7xl">
       <div class="flex flex-col gap-4">
         <h3 class="font-bold text-2xl pl-4">Epic Overview</h3>
@@ -107,24 +116,10 @@ onMounted(async () => {
         </Panel>
       </div>
     </div>
-    <!-- <div -->
-    <!--   v-if="estimation && estimation.stories && !isReview" -->
-    <!--   class="absolute flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700" -->
-    <!-- > -->
-    <!--   <Button asChild v-slot="slotProps"> -->
-    <!--     <RouterLink -->
-    <!--       :to="{ -->
-    <!--         name: 'storyView', -->
-    <!--         params: { storyId: estimation.stories[0].uuid, epicId: estimation.uuid }, -->
-    <!--       }" -->
-    <!--       :class="slotProps.class" -->
-    <!--       >{{ -->
-    <!--         estimation.userEstimationStatus === 'In Progress' -->
-    <!--           ? 'Continue Estimation' -->
-    <!--           : 'Start Estimation' -->
-    <!--       }}</RouterLink -->
-    <!--     > -->
-    <!--   </Button> -->
-    <!-- </div> -->
+    <div
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+    >
+      <Button label="Submit to Shortcut" :loading="loading" @click="submitToShortcut()" />
+    </div>
   </div>
 </template>

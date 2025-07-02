@@ -389,6 +389,23 @@ export const useEstimationsStore = defineStore(
       }
     }
 
+    async function submitEstimationToShortcut(stories: Story[]) {
+      if (stories) {
+        let submissionError = null
+
+        const { error } = await supabase.functions.invoke('shortcut-data-push', {
+          body: stories,
+        })
+
+        if (error) {
+          submissionError = `Failed to update user: ${error}`
+          return submissionError
+        }
+
+        return submissionError
+      }
+    }
+
     return {
       getEstimations,
       remainingEstimations,
@@ -402,6 +419,7 @@ export const useEstimationsStore = defineStore(
       hasUserCompletedEstimation,
       submitStoryEstimation,
       finishEstimation,
+      submitEstimationToShortcut,
     }
   },
   { persist: true },
