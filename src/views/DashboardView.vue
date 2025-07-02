@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useUserSessionStore } from '@/stores/userSession'
 import { useEstimationsStore } from '@/stores/estimations'
 import AlertBanner from '@/components/AlertBanner.vue'
@@ -6,6 +7,12 @@ import VueMarkdown from 'vue-markdown-render'
 
 const userSessionStore = useUserSessionStore()
 const estimationsStore = useEstimationsStore()
+const isAdmin = userSessionStore?.currentUser?.roles[0]?.name === 'admin'
+const routeName = ref('epicOverview')
+
+if (isAdmin) {
+  routeName.value = 'adminReview'
+}
 
 userSessionStore.getUser()
 </script>
@@ -81,7 +88,7 @@ userSessionStore.getUser()
               <Button asChild v-slot="slotProps">
                 <RouterLink
                   :to="{
-                    name: 'epicOverview',
+                    name: routeName,
                     params: { id: estimation.uuid },
                     query: { review: 'true' },
                   }"

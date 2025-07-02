@@ -43,6 +43,13 @@ function closeNewTeamDialog() {
         >
           <Column field="full_name" header="Name"></Column>
           <Column field="email" header="Email"></Column>
+          <Column field="roles" header="Role">
+            <template #body="slotProps">
+              <span class="capitalize">
+                {{ slotProps.data?.roles[0]?.name ?? 'No role' }}
+              </span>
+            </template>
+          </Column>
           <Column field="teams" header="Team">
             <template #body="slotProps">
               <span class="capitalize">

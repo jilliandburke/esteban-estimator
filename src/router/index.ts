@@ -25,6 +25,11 @@ const router = createRouter({
       component: () => import('../views/estimation-flow/ReviewView.vue'),
     },
     {
+      path: '/estimation/:id/admin-review',
+      name: 'adminReview',
+      component: () => import('../views/estimation-flow/AdminReview.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('../views/SettingsView.vue'),

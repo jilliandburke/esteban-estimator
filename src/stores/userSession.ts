@@ -10,6 +10,11 @@ export type Team = {
   name: string | null
 }
 
+export type Role = {
+  uuid: string | null
+  name: string | null
+}
+
 export type User = {
   id: string
   email: string
@@ -17,6 +22,7 @@ export type User = {
   avatar_url: string | null
   theme: 'system' | 'light' | 'dark'
   teams: Team[]
+  roles: Role[]
 }
 
 export const useUserSessionStore = defineStore(
@@ -49,7 +55,7 @@ export const useUserSessionStore = defineStore(
       if (authUser) {
         const { data, error } = await supabase
           .from('profiles')
-          .select(`*, teams (uuid, name)`)
+          .select(`*, teams (uuid, name), roles( uuid, name )`)
           .eq('id', authUser.id)
 
         if (error) {
@@ -60,7 +66,7 @@ export const useUserSessionStore = defineStore(
 
           resetGetUserError()
           currentUser.value = profile
-          await estimationsStore.getRemainingEstimations()
+          await estimationsStore.getEstimations()
         }
       }
     }
@@ -108,7 +114,9 @@ export const useUserSessionStore = defineStore(
     }
 
     async function getAllUsers() {
-      const { data, error } = await supabase.from('profiles').select(`*, teams (uuid, name)`)
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`*, teams (uuid, name), roles( uuid, name )`)
 
       console.log(data)
 

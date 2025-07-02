@@ -1,4 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useUserSessionStore } from '@/stores/userSession'
+
+const userSessionStore = useUserSessionStore()
+const isAdmin = userSessionStore?.currentUser?.roles[0]?.name === 'admin'
+</script>
 
 <template>
   <div class="flex h-full p-10 mx-6 justify-center">
@@ -7,8 +12,8 @@
       <Tabs value="0" scrollable>
         <TabList>
           <Tab value="0">Acccount</Tab>
-          <Tab value="1">App Settings</Tab>
-          <Tab value="2">Teams and Users</Tab>
+          <Tab value="1" v-if="isAdmin">App Settings</Tab>
+          <Tab value="2" v-if="isAdmin">Teams and Users</Tab>
         </TabList>
         <TabPanels>
           <TabPanel value="0">

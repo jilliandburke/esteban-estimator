@@ -22,6 +22,18 @@ export type Story = {
     created_at: string
     updated_at: string
   }
+  estimations?: {
+    id: number
+    uuid: string
+    user_id: string
+    story_id: string
+    estimation: number | null
+    profiles?: {
+      full_name: string | null
+    }
+    created_at: string
+    updated_at: string
+  }[]
   created_at: string
   updated_at: string
 }
@@ -85,7 +97,7 @@ export const useEstimationsStore = defineStore(
       )
     })
 
-    async function getRemainingEstimations() {
+    async function getEstimations() {
       let error
       let mappedEstimations: Estimation[] = []
       const user = useUserSessionStore().currentUser
@@ -108,21 +120,14 @@ export const useEstimationsStore = defineStore(
         mappedEstimations = epicData
 
         for (const estimation of mappedEstimations) {
-          const { data: storiesData, error: storiesError } = await supabase
-            .from('stories')
-            .select()
-            .eq('epic_id', estimation.uuid)
-
-          if (storiesError) {
-            error = storiesError
-            return
-          }
+          const stories = await getStories(estimation.uuid)
 
           const completedEstimation = await hasUserCompletedEstimation(estimation.uuid)
 
           estimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
 
-          if (storiesData) estimation.stories = storiesData
+          //@ts-expect-error idk what this means dude
+          if (stories) estimation.stories = stories
         }
 
         mappedEstimations.map(
@@ -227,8 +232,33 @@ export const useEstimationsStore = defineStore(
         }
       }
 
-      stories.value = data
-      return data
+      stories.value = mappedStories
+      return mappedStories
+    }
+
+    async function getStoriesWithAllEstimations(epicId: string) {
+      const { data, error } = await supabase.from('stories').select().eq('epic_id', epicId)
+
+      if (error) {
+        return []
+      }
+
+      const mappedStories: Story[] = data
+
+      if (mappedStories) {
+        for (const story of mappedStories) {
+          const { data } = await supabase
+            .from('estimations')
+            .select('*, profiles (full_name)')
+            .eq('story_id', story.uuid)
+
+          if (data) {
+            story.estimations = data
+          }
+        }
+      }
+
+      return mappedStories
     }
 
     async function getStoryCount(epicId: string) {
@@ -247,6 +277,7 @@ export const useEstimationsStore = defineStore(
 
       if (!user) return { data: null, error: 'No user found' }
 
+      // Get the team_id from the epic to use when updating the estimation
       const { data: teamIdData, error: teamError } = await supabase
         .from('epics')
         .select('team_id')
@@ -256,6 +287,7 @@ export const useEstimationsStore = defineStore(
       if (teamError) return { data: null, error: teamError }
       if (!teamIdData) return { data: null, error: 'No team_id found' }
 
+      // Update estimation to confirm it's been submitted
       const { data, error } = await supabase
         .from('estimations')
         .upsert(
@@ -280,6 +312,8 @@ export const useEstimationsStore = defineStore(
           }
         })
       }
+
+      // TODO - If review isn't required run an edge function to update shortcut
 
       return { data, error }
     }
@@ -356,7 +390,7 @@ export const useEstimationsStore = defineStore(
     }
 
     return {
-      getRemainingEstimations,
+      getEstimations,
       remainingEstimations,
       completedEstimations,
       estimations,
@@ -364,6 +398,7 @@ export const useEstimationsStore = defineStore(
       getEstimationsError,
       getEstimation,
       getStoryCount,
+      getStoriesWithAllEstimations,
       hasUserCompletedEstimation,
       submitStoryEstimation,
       finishEstimation,
