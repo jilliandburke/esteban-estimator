@@ -59,6 +59,16 @@ userSessionStore.getUser()
           </template>
         </Card>
       </div>
+
+      <!-- If no estimations at all -->
+      <div
+        v-else-if="estimationsStore.estimations.length = 0"
+        class="flex items-center justify-center min-h-44 w-full"
+      >
+        <h3 class="text-xl">There have been no epics added yet</h3>
+      </div>
+
+      <!-- If you've just completed all the available ones -->
       <div v-else class="flex items-center justify-center min-h-44 w-full">
         <h3 class="text-xl">Congratulations! You've completed all your estimations</h3>
       </div>
@@ -67,7 +77,7 @@ userSessionStore.getUser()
     <div class="flex flex-col gap-4">
       <h3 class="font-bold text-2xl">Completed Estimations</h3>
 
-      <div class="flex flex-wrap gap-6">
+      <div class="flex flex-wrap gap-6" v-if="estimationsStore.completedEstimations.length">
         <Card
           class="w-96 overflow-hidden"
           :pt="{ body: { class: 'flex flex-col justify-between h-full' } }"
@@ -99,6 +109,9 @@ userSessionStore.getUser()
             </div>
           </template>
         </Card>
+      </div>
+      <div v-else class="flex items-center justify-center min-h-44 w-full">
+        <h3 class="text-xl">You haven't completed any estimations yet</h3>
       </div>
     </div>
   </div>
