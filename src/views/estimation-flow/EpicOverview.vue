@@ -30,7 +30,7 @@ onMounted(async () => {
   <div v-if="loading" class="flex justify-center mt-64">
     <ProgressSpinner />
   </div>
-  <div v-else class="flex h-full p-10 mx-6 justify-center">
+  <div v-else class="flex h-full p-10 mx-6 justify-center mb-30">
     <div class="flex flex-col gap-10 w-full max-w-7xl">
       <div class="flex flex-col gap-4">
         <h3 class="font-bold text-2xl pl-4">Epic Overview</h3>
@@ -75,7 +75,7 @@ onMounted(async () => {
     </div>
     <div
       v-if="estimation && estimation.stories && !isReview"
-      class="absolute flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
     >
       <Button asChild v-slot="slotProps">
         <RouterLink

@@ -20,7 +20,7 @@ function goToPreviousStory() {
 </script>
 
 <template>
-  <div class="flex h-full p-10 mx-6 justify-center">
+  <div class="flex h-full p-10 mx-6 justify-center mb-30">
     <div class="flex flex-col gap-4">
       <h3 class="font-bold text-2xl pl-4">Review Estimates</h3>
       <Panel v-if="stories">
@@ -47,14 +47,11 @@ function goToPreviousStory() {
       </Panel>
     </div>
     <div
-      class="absolute flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
     >
       <div class="flex gap-4">
         <Button severity="secondary" @click="goToPreviousStory"> Back </Button>
         <Button @click="estimationStore.finishEstimation(stories[0].epic_id)"> Submit </Button>
-        <!-- <Button v-if="nextStory || (readyForReview && isLastStory)" @click="goToNextStory"> -->
-        <!--   {{ nextStory ? 'Next' : 'Review' }} -->
-        <!-- </Button> -->
       </div>
     </div>
   </div>

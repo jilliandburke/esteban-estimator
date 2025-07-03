@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useUserSessionStore } from '@/stores/userSession'
 import { useTeamsStore } from '@/stores/teams'
 import { useRouter } from 'vue-router'
+import { FunctionsHttpError, FunctionsRelayError, FunctionsFetchError } from '@supabase/supabase-js'
 
 export type Story = {
   id: number
@@ -420,7 +421,15 @@ export const useEstimationsStore = defineStore(
         })
 
         if (error) {
-          submissionError = `Failed to update user: ${error}`
+          if (error instanceof FunctionsHttpError) {
+            const errorMessage = await error.context.json()
+            submissionError = errorMessage.error
+          } else if (error instanceof FunctionsRelayError) {
+            submissionError = error.message
+          } else if (error instanceof FunctionsFetchError) {
+            submissionError = error.message
+          }
+
           return submissionError
         }
 
