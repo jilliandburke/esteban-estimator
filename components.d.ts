@@ -21,6 +21,7 @@ declare module 'vue' {
     Image: typeof import('primevue/image')['default']
     InputGroup: typeof import('primevue/inputgroup')['default']
     InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
+    InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
     InviteUser: typeof import('./src/components/dialogs/InviteUser.vue')['default']
     Menu: typeof import('primevue/menu')['default']

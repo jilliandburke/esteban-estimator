@@ -237,7 +237,11 @@ export const useEstimationsStore = defineStore(
     }
 
     async function getStoriesWithAllEstimations(epicId: string) {
-      const { data, error } = await supabase.from('stories').select().eq('epic_id', epicId)
+      const { data, error } = await supabase
+        .from('stories')
+        .select()
+        .eq('epic_id', epicId)
+        .order('shortcut_id', { ascending: true })
 
       if (error) {
         return []
@@ -389,6 +393,24 @@ export const useEstimationsStore = defineStore(
       }
     }
 
+    async function updateStoryPoints(storyId: string, points: { name: number; code: number }) {
+      if (points && storyId) {
+        let updateError = null
+
+        const { error } = await supabase
+          .from('stories')
+          .update({ story_points: points.code })
+          .eq('uuid', storyId)
+
+        if (error) {
+          updateError = `Failed to update user: ${error}`
+          return updateError
+        }
+
+        return updateError
+      }
+    }
+
     async function submitEstimationToShortcut(stories: Story[]) {
       if (stories) {
         let submissionError = null
@@ -419,6 +441,7 @@ export const useEstimationsStore = defineStore(
       hasUserCompletedEstimation,
       submitStoryEstimation,
       finishEstimation,
+      updateStoryPoints,
       submitEstimationToShortcut,
     }
   },

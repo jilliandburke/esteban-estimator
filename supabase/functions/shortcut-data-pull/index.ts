@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     if (!epicData.label_ids.includes(settingsData.sc_label_id)) {
       return new Response({
         headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json',
         },
         status: 204,
@@ -124,6 +125,7 @@ Deno.serve(async (req) => {
       }),
       {
         headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json',
         },
         status: 200,
@@ -136,6 +138,7 @@ Deno.serve(async (req) => {
       }),
       {
         headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json',
         },
         status: 400,

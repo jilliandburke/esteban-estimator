@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useEstimationsStore, type Estimation, type Story } from '@/stores/estimations'
+import { usePointScaleStore } from '@/stores/pointScales'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
@@ -8,11 +9,26 @@ import { format } from 'date-fns'
 
 const route = useRoute()
 const estimationStore = useEstimationsStore()
+const pointScaleStore = usePointScaleStore()
 const estimation = ref<Estimation | undefined>(undefined)
 const toast = useToast()
 const stories = ref<Story[]>([])
 const expandedRows = ref({})
 const loading = ref(estimation.value === undefined)
+
+const estimationOptions = computed(() => {
+  const pointList = ref(pointScaleStore.getPointScale?.scale?.split(', ').map(Number))
+
+  if (pointList.value) {
+    const mappedTeams = pointList.value.map((point) => {
+      return { name: point, code: point }
+    })
+
+    return mappedTeams
+  } else {
+    return []
+  }
+})
 
 onMounted(async () => {
   if (route.params.id) {
@@ -37,11 +53,39 @@ async function submitToShortcut() {
   const result = await estimationStore.submitEstimationToShortcut(stories.value)
 
   if (result && result !== null) {
-    toast.add({ severity: 'danger', summary: `${result}`, life: 3000 })
+    toast.add({ severity: 'danger', summary: 'Error', detail: `${result}`, life: 3000 })
     return
   }
 
-  toast.add({ severity: 'success', summary: 'User successfully invited', life: 3000 })
+  toast.add({
+    severity: 'success',
+    summary: 'Success',
+    detail: 'Estimations submitted',
+    life: 3000,
+  })
+}
+
+async function onCellEditComplete(event: any) {
+  const { data, newValue } = event
+
+  const result = await estimationStore.updateStoryPoints(data.uuid, newValue)
+
+  if (result && result !== null) {
+    toast.add({ severity: 'danger', summary: 'Error', detail: `${result}`, life: 3000 })
+    return
+  }
+
+  const allStories = await estimationStore.getStoriesWithAllEstimations(data.epic_id)
+
+  if (allStories) {
+    stories.value = allStories
+  }
+  toast.add({
+    severity: 'success',
+    summary: 'Success',
+    detail: 'Story estimation updated',
+    life: 3000,
+  })
 }
 </script>
 
@@ -80,17 +124,30 @@ async function submitToShortcut() {
             dataKey="uuid"
             :value="stories"
             size="large"
+            editMode="cell"
+            @cell-edit-complete="onCellEditComplete"
             tableStyle="min-width: 50rem"
           >
             <Column expander style="width: 5rem" />
-            <Column header="ID">
+            <Column field="shortcut_id" header="ID">
               <template #body="slotProps">
                 <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
               </template>
             </Column>
             <Column field="title" header="Title"></Column>
             <Column field="description" header="Description"></Column>
-            <Column field="story_points" header="Story Points"> </Column>
+            <Column field="story_points" header="Story Points" style="width: 20%">
+              <template #editor="{ data, field }">
+                <Select
+                  v-model="data[field]"
+                  name="storyPoints"
+                  :options="estimationOptions"
+                  optionLabel="name"
+                  placeholder="Select points"
+                  size="small"
+                />
+              </template>
+            </Column>
             <template #expansion="slotProps">
               <div class="py-4 pl-14">
                 <DataTable
@@ -108,7 +165,7 @@ async function submitToShortcut() {
                       {{ format(slotProps.data?.updated_at, 'LLL d, yyyy') }}
                     </template>
                   </Column>
-                  <Column field="estimation" header="Estimation"></Column>
+                  <Column field="estimation" header="Estimation"> </Column>
                 </DataTable>
               </div>
             </template>

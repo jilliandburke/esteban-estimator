@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({}), {
       headers: {
+        ...corsHeaders,
         'Content-Type': 'application/json',
       },
       status: 200,
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
       }),
       {
         headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json',
         },
         status: 400,
