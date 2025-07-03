@@ -73,7 +73,6 @@ export const useTeamsStore = defineStore(
         return
       } else {
         teamList.value = data
-        console.log('teamList in store', teamList.value)
       }
     }
 

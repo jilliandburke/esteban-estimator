@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useToast } from 'primevue/usetoast'
 import { useEstimationsStore } from '@/stores/estimations'
 import { useThemeStore } from '@/stores/theme'
+import { FunctionsHttpError, FunctionsRelayError, FunctionsFetchError } from '@supabase/supabase-js'
 
 export type Team = {
   uuid: string | null
@@ -118,8 +119,6 @@ export const useUserSessionStore = defineStore(
         .from('profiles')
         .select(`*, teams (uuid, name), roles( uuid, name )`)
 
-      console.log(data)
-
       if (error) {
         console.log('Error retriving users', error)
         return
@@ -128,25 +127,35 @@ export const useUserSessionStore = defineStore(
       allUsers.value = data
     }
 
-    async function inviteUser(userData: {
+    async function createUser(userData: {
       name: string
-      team: { name: string; code: string }
       email: string
+      password: string
+      team: { name: string; code: string }
+      role: { name: string; code: string }
     }) {
       if (userData) {
-        let inviteError = null
+        let createError = null
 
-        const { error } = await supabase.functions.invoke('invite-user', {
+        const { error } = await supabase.functions.invoke('create-user', {
           body: userData,
         })
 
         if (error) {
-          inviteError = `Failed to update user: ${error}`
-          return inviteError
+          if (error instanceof FunctionsHttpError) {
+            const errorMessage = await error.context.json()
+            createError = errorMessage.error
+          } else if (error instanceof FunctionsRelayError) {
+            createError = error.message
+          } else if (error instanceof FunctionsFetchError) {
+            createError = error.message
+          }
+
+          return createError
         }
 
         await getAllUsers()
-        return inviteError
+        return createError
       }
     }
 
@@ -154,7 +163,7 @@ export const useUserSessionStore = defineStore(
       getUser,
       updateUser,
       getAllUsers,
-      inviteUser,
+      createUser,
       getUserError,
       isLoggedIn,
       currentUser,

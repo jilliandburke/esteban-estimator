@@ -30,8 +30,6 @@ export const usePointScaleStore = defineStore(
         return 'No point scale set'
       }
 
-      console.log('pointScaleId', pointScaleId)
-
       const { data, error } = await supabase
         .from('point_scales')
         .select()

@@ -272,7 +272,6 @@ function toggleApiKeyVisibility() {
                     fluid
                   />
                   <InputGroupAddon>
-                    <!-- TODO - implement show/hide -->
                     <Button
                       :icon="visibilityIcon"
                       severity="secondary"
@@ -292,9 +291,14 @@ function toggleApiKeyVisibility() {
 
             <!-- Allows user to copy Shortcut Webhook URL -->
             <div class="flex flex-col gap-2 w-full md:max-w-1/2 mt-0 md:mt-9.5">
-              <label for="theme">Webhook URL</label>
+              <label for="webhookUrl">Webhook URL</label>
               <InputGroup>
-                <InputText placeholder="Webhook URL" :value="webhookUrl" disabled />
+                <InputText
+                  name="webhookUrl"
+                  placeholder="Webhook URL"
+                  :value="webhookUrl"
+                  disabled
+                />
                 <InputGroupAddon>
                   <Button label="Copy" severity="secondary" @click="copyToClipboard" />
                 </InputGroupAddon>

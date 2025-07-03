@@ -20,7 +20,7 @@ const resolver = zodResolver(
 )
 
 // @ts-expect-error idk typings for this yet
-async function inviteUser({ valid, values }) {
+async function createTeam({ valid, values }) {
   console.log(values)
   if (valid) {
     const result = await teamsStore.createTeam(values.name)
@@ -31,7 +31,7 @@ async function inviteUser({ valid, values }) {
     }
 
     emit('closeDialog')
-    toast.add({ severity: 'success', summary: 'User successfully invited', life: 3000 })
+    toast.add({ severity: 'success', summary: 'Team successfully created', life: 3000 })
   }
 }
 </script>
@@ -44,7 +44,7 @@ async function inviteUser({ valid, values }) {
     :closable="false"
     :style="{ width: '25rem' }"
   >
-    <Form v-slot="$form" :resolver @submit="inviteUser" class="flex flex-col gap-5 w-full">
+    <Form v-slot="$form" :resolver @submit="createTeam" class="flex flex-col gap-5 w-full">
       <!-- Name -->
       <div class="flex flex-col gap-2">
         <label for="name">Name</label>

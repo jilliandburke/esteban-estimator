@@ -21,7 +21,9 @@ Deno.serve(async (req) => {
     const { data: createdUser, error: createUserError } =
       await supabaseClient.auth.admin.createUser({
         email: payload.email,
+        password: payload.password,
         email_confirm: true,
+        user_metadata: { name: 'Yoda' },
       })
 
     if (createUserError) {
@@ -51,12 +53,15 @@ Deno.serve(async (req) => {
       throw userTeamError
     }
 
-    const { error: authError } = await supabaseClient.auth.admin.inviteUserByEmail(payload.email, {
-      redirectTo: `http://localhost:5173/account-setup?userId=${createdUser.user.id}`,
+    const { error: userRoleError } = await supabaseClient.from('users_roles').insert({
+      user_id: createdUser.user.id,
+      role_id: payload.role.code,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
 
-    if (authError) {
-      throw authError
+    if (userRoleError) {
+      throw userRoleError
     }
 
     return new Response(

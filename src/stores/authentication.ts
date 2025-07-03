@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserSessionStore } from '@/stores/userSession'
 import { useTeamsStore } from '@/stores/teams'
+import { useRolesStore } from '@/stores/roles'
 import { useSettingsStore } from '@/stores/settings'
 import { usePointScaleStore } from '@/stores/pointScales'
 import { supabase } from '@/lib/supabaseClient'
@@ -22,6 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   const logoutError = ref<null | string>(null)
   const userSessionStore = useUserSessionStore()
   const teamStore = useTeamsStore()
+  const rolesStore = useRolesStore()
   const settingsStore = useSettingsStore()
   const pointScaleStore = usePointScaleStore()
   const loginLoading = ref(false)
@@ -56,6 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
         await settingsStore.getSettings()
         await pointScaleStore.listPointScales()
         await pointScaleStore.readPointScale()
+        await rolesStore.getAllRoles()
 
         // Reset errors and push to the Dashboard
         resetLoginError()

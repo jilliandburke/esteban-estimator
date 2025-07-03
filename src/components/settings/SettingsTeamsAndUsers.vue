@@ -5,11 +5,11 @@ import { useTeamsStore } from '@/stores/teams'
 
 const userSessionStore = useUserSessionStore()
 const teamsStore = useTeamsStore()
-const showInviteUserDialog = ref(false)
+const showCreateUserDialog = ref(false)
 const showNewTeamDialog = ref(false)
 
-function closeUserInviteDialog() {
-  showInviteUserDialog.value = false
+function closeUserCreateDialog() {
+  showCreateUserDialog.value = false
 }
 
 function closeNewTeamDialog() {
@@ -24,14 +24,14 @@ function closeNewTeamDialog() {
         <div class="flex gap-8 items-center">
           <h3 class="font-bold text-xl">Users</h3>
           <Button
-            label="Invite User"
+            label="Create User"
             icon="pi pi-user-plus"
             size="small"
-            @click="showInviteUserDialog = true"
+            @click="showCreateUserDialog = true"
           />
-          <InviteUser
-            :showInviteUserDialog="showInviteUserDialog"
-            @closeDialog="closeUserInviteDialog"
+          <CreateUser
+            :showCreateUserDialog="showCreateUserDialog"
+            @closeDialog="closeUserCreateDialog"
           />
         </div>
         <DataTable

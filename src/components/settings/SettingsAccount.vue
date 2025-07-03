@@ -77,7 +77,14 @@ const onFormSubmit = async ({ valid, values }) => {
       <!-- Name -->
       <div class="flex flex-col gap-1">
         <label for="name">Name</label>
-        <InputText name="name" type="text" placeholder="Name" :disabled="loading" fluid />
+        <InputText
+          name="name"
+          type="text"
+          placeholder="Name"
+          :disabled="loading"
+          autocomplete="off"
+          fluid
+        />
         <Message v-if="$form.name?.invalid" severity="error" size="small" variant="simple">{{
           $form.name.error?.message
         }}</Message>
@@ -85,10 +92,17 @@ const onFormSubmit = async ({ valid, values }) => {
 
       <!-- Email -->
       <div class="flex flex-col gap-2 w-full">
-        <label for="email1" class="text-surface-900 dark:text-surface-0 font-medium leading-normal"
+        <label for="email" class="text-surface-900 dark:text-surface-0 font-medium leading-normal"
           >Email Address</label
         >
-        <InputText name="email" type="email" placeholder="Email" :disabled="loading" fluid />
+        <InputText
+          name="email"
+          type="email"
+          placeholder="Email"
+          :disabled="loading"
+          autocomplete="email"
+          fluid
+        />
         <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">{{
           $form.email.error?.message
         }}</Message>
