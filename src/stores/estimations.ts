@@ -85,17 +85,13 @@ export const useEstimationsStore = defineStore(
 
     const remainingEstimations = computed(() => {
       return estimations.value.filter(
-        (item) =>
-          item.userEstimationStatus !== EstimationStatus.COMPLETE &&
-          !item.team_completed_estimation_at,
+        (item) => item.userEstimationStatus !== EstimationStatus.COMPLETE,
       )
     })
 
     const completedEstimations = computed(() => {
       return estimations.value.filter(
-        (item) =>
-          item.team_completed_estimation_at ||
-          item.userEstimationStatus === EstimationStatus.COMPLETE,
+        (item) => item.userEstimationStatus === EstimationStatus.COMPLETE,
       )
     })
 

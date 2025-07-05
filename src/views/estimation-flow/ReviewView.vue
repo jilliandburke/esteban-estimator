@@ -36,7 +36,19 @@ function goToPreviousStory() {
               <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
             </template>
           </Column>
-          <Column field="title" header="Title"></Column>
+          <Column field="title" header="Title">
+            <template #body="slotProps">
+              <RouterLink
+                :to="{
+                  name: 'storyView',
+                  params: { storyId: slotProps.data.uuid, epicId: slotProps.data.epicId },
+                }"
+                class="underline"
+              >
+                {{ slotProps.data.title }}
+              </RouterLink>
+            </template>
+          </Column>
           <Column field="description" header="Description"></Column>
           <Column field="story_points" header="My Estimations">
             <template #body="slotProps">
