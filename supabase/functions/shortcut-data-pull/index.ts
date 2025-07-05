@@ -81,24 +81,41 @@ Deno.serve(async (req) => {
 
     const storiesData = await storiesResponse.json()
 
+    // Check if this epic already exists in the database
+    const { data: existingEpic, error: queryError } = await supabaseClient
+      .from('epics')
+      .select('id')
+      .eq('shortcut_id', epicData.id)
+      .maybeSingle()
+
+    if (queryError) {
+      throw new Error(`Database query error: ${queryError.message}`)
+    }
+
+    // Prepare the epic data for upsert
+    const dataForUpsert = {
+      shortcut_id: epicData.id,
+      title: epicData.name,
+      description: epicData.description,
+      link: epicData.app_url,
+      team_id: settingsData.team_id,
+      story_count: storiesData.length,
+      updated_at: new Date().toISOString(),
+    }
+
+    // If this is a new epic (doesn't exist yet), set created_at
+    if (!existingEpic) {
+      epicData.created_at = new Date().toISOString()
+    }
+
     // Store Epic in Supabase
     const { data: epicUpsertData, error: epicUpsertError } = await supabaseClient
       .from('epics')
-      .upsert(
-        {
-          shortcut_id: epicData.id,
-          title: epicData.name,
-          description: epicData.description,
-          link: epicData.app_url,
-          team_id: settingsData.team_id,
-          story_count: storiesData.length,
-        },
-        { onConflict: 'shortcut_id', ignoreDuplicates: false },
-      )
+      .upsert(dataForUpsert, { onConflict: 'shortcut_id', ignoreDuplicates: false })
       .select()
 
     if (epicUpsertError) {
-      throw epicUpsertError
+      throw new Error(`Database upsert error: ${epicUpsertError.message}`)
     }
 
     // Store Stories in Supabase
@@ -106,6 +123,7 @@ Deno.serve(async (req) => {
       shortcut_id: story.id,
       title: story.name,
       description: story.description,
+      link: story.app_url,
       epic_id: epicUpsertData[0].uuid,
     }))
 
@@ -116,6 +134,55 @@ Deno.serve(async (req) => {
 
     if (storiesUpsertError) {
       throw storiesUpsertError
+    }
+
+    // After successfully inserting an epic
+    if (!existingEpic) {
+      // Collect emails of team for Slack notification
+      let teamEmails = []
+      const { data: teamData, error } = await supabaseClient
+        .from('users_teams')
+        .select('*, profiles ( email )')
+        .eq('team_id', settingsData.team_id)
+
+      if (error) {
+        throw error
+      } else {
+        teamEmails = teamData.map((item) => item.profiles.email)
+      }
+
+      try {
+        // Call the Slack notifier function
+        const notifierResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/slack-notifier`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+            },
+
+            body: JSON.stringify({
+              recipients: [...teamEmails],
+              // Replace with actual recipients
+              message: `New Epic Ready for Estimation\n\n>*${epicUpsertData[0].title}*\n>${epicUpsertData[0].story_count} stories`,
+              button: {
+                text: 'Estimate Now',
+                url: `${Deno.env.get('SITE_URL')}/estimation/${epicUpsertData[0].uuid}`,
+
+                style: 'primary',
+              },
+            }),
+          },
+        )
+
+        const notifierResult = await notifierResponse.json()
+
+        console.log('Slack notification result:', notifierResult)
+      } catch (notifyError) {
+        // Log the error but don't fail the whole function
+        console.error('Failed to send notification:', notifyError)
+      }
     }
 
     return new Response(
