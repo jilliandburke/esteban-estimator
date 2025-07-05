@@ -68,6 +68,10 @@ async function submitToShortcut() {
 async function onCellEditComplete(event: any) {
   const { data, newValue } = event
 
+  if (newValue === data.story_points) {
+    return
+  }
+
   const result = await estimationStore.updateStoryPoints(data.uuid, newValue)
 
   if (result && result !== null) {
@@ -157,7 +161,14 @@ async function onCellEditComplete(event: any) {
                 >
                   <Column field="profiles" header="Estimator">
                     <template #body="slotProps">
-                      {{ slotProps.data?.profiles.full_name || '' }}
+                      <div class="flex items-center gap-2">
+                        <Avatar
+                          :image="slotProps.data?.profiles.avatar_url"
+                          shape="circle"
+                          size="small"
+                        />
+                        {{ slotProps.data?.profiles.full_name || '' }}
+                      </div>
                     </template>
                   </Column>
                   <Column field="updated_at" header="Estimated At">
