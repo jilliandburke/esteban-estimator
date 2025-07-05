@@ -113,8 +113,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     // Get the Slack bot token from environment variables
-    // const slackBotToken = Deno.env.get('SLACK_BOT_TOKEN')
-    const slackBotToken = 'xoxb-9138175114871-9173178117920-mODFdOtvqbeMNBMw1aRYJWCI'
+    const slackBotToken = Deno.env.get('SLACK_BOT_TOKEN')
     if (!slackBotToken) {
       return new Response('SLACK_BOT_TOKEN environment variable not set', {
         headers: corsHeaders,
