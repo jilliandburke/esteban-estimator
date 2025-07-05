@@ -137,7 +137,7 @@ function goToPreviousStory() {
   <div class="flex h-full p-10 mx-6 justify-center">
     <div class="flex flex-col md:flex-row md:gap-10 w-full max-w-7xl mb-30">
       <div class="flex flex-col gap-4 md:w-1/2">
-        <h3 class="font-bold text-2xl pl-4">Story Estimation</h3>
+        <h3 class="font-bold text-2xl pl-4">Story Overview</h3>
 
         <Panel v-if="story">
           <template #header>
@@ -178,15 +178,26 @@ function goToPreviousStory() {
       v-if="story"
       class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
     >
-      <div class="flex gap-4">
-        <Button severity="secondary" @click="goToPreviousStory"> Back </Button>
-        <Button
-          v-if="nextStory || (readyForReview && isLastStory)"
-          @click="goToNextStory"
-          :disabled="!selectedEstimation"
-        >
-          {{ nextStory ? 'Next' : 'Review' }}
-        </Button>
+      <div class="flex justify-between w-full">
+        <div>
+          <Button
+            as="router-link"
+            severity="secondary"
+            icon="pi pi-angle-left"
+            label="Back to Epic"
+            :to="{ name: 'epicOverview', params: { id: route.params.epicId } }"
+          />
+        </div>
+        <div class="flex items-center gap-4">
+          <Button severity="secondary" @click="goToPreviousStory"> Previous </Button>
+          <Button
+            v-if="nextStory || (readyForReview && isLastStory)"
+            @click="goToNextStory"
+            :disabled="!selectedEstimation"
+          >
+            {{ nextStory ? 'Next' : 'Review' }}
+          </Button>
+        </div>
       </div>
     </div>
   </div>

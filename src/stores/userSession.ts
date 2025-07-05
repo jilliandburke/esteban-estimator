@@ -48,6 +48,14 @@ export const useUserSessionStore = defineStore(
       getUserError.value = null
     }
 
+    function getUsersWithRole(roleName: string) {
+      return allUsers.value?.filter((user) => {
+        if (user.roles.some((role) => role.name === roleName)) {
+          return user
+        }
+      })
+    }
+
     async function getUser() {
       const {
         data: { user: authUser },
@@ -164,6 +172,7 @@ export const useUserSessionStore = defineStore(
       updateUser,
       getAllUsers,
       createUser,
+      getUsersWithRole,
       getUserError,
       isLoggedIn,
       currentUser,

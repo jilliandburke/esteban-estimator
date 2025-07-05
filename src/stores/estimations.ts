@@ -81,6 +81,7 @@ export const useEstimationsStore = defineStore(
     const stories = ref<Story[]>([])
     const getEstimationsError = ref<string | null>(null)
     const router = useRouter()
+    const userSessionStore = useUserSessionStore()
 
     const remainingEstimations = computed(() => {
       return estimations.value.filter(
@@ -101,10 +102,11 @@ export const useEstimationsStore = defineStore(
     const allEstimations = computed(() => {
       return estimations.value
     })
+
     async function getEstimations() {
       let error
       let mappedEstimations: Estimation[] = []
-      const user = useUserSessionStore().currentUser
+      const user = userSessionStore.currentUser
 
       if (!user) return
 
@@ -154,7 +156,7 @@ export const useEstimationsStore = defineStore(
       }
 
       const storyCount = await getStoryCount(epicId)
-      const user = useUserSessionStore().currentUser
+      const user = userSessionStore.currentUser
       const { count, error } = await supabase
         .from('estimations')
         .select('*', { count: 'exact', head: true })
@@ -215,7 +217,7 @@ export const useEstimationsStore = defineStore(
         return
       }
 
-      const user = useUserSessionStore().currentUser
+      const user = userSessionStore.currentUser
 
       if (!user) return { data: null, error: 'No user found' }
 
@@ -281,7 +283,7 @@ export const useEstimationsStore = defineStore(
     }
 
     async function submitStoryEstimation(storyId: string, epicId: string, estimation: number) {
-      const user = useUserSessionStore().currentUser
+      const user = userSessionStore.currentUser
 
       if (!user) return { data: null, error: 'No user found' }
 
@@ -384,13 +386,45 @@ export const useEstimationsStore = defineStore(
           }
         }
 
-        const { error: epicUpdateError } = await supabase
+        const { data: epicUpdateData, error: epicUpdateError } = await supabase
           .from('epics')
           .update({ team_completed_estimation_at: new Date().toISOString() })
           .eq('uuid', epicId)
+          .select()
 
         if (epicUpdateError) {
           console.log('Error updating epic', epicUpdateError)
+        } else {
+          let createError = null
+
+          const adminList = userSessionStore.getUsersWithRole('admin')
+
+          const { error } = await supabase.functions.invoke('slack-notifier', {
+            body: {
+              recipients: adminList?.map((user) => user.email),
+              recipientType: 'email',
+              message: `The estimation for epic *${epicUpdateData[0].title}* has been completed by the team!`,
+              button: {
+                text: 'Review Estimation',
+                url: `${import.meta.env.VITE_SITE_URL}/estimation/${epicId}/admin-review`,
+                style: 'primary',
+              },
+            },
+            method: 'POST',
+          })
+
+          if (error) {
+            if (error instanceof FunctionsHttpError) {
+              const errorMessage = await error.context.json()
+              createError = errorMessage.error
+            } else if (error instanceof FunctionsRelayError) {
+              createError = error.message
+            } else if (error instanceof FunctionsFetchError) {
+              createError = error.message
+            }
+
+            return createError
+          }
         }
 
         router.push({ path: '/' })

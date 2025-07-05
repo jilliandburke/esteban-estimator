@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useEstimationsStore, type Estimation } from '@/stores/estimations'
+import { useEstimationsStore, type Estimation, EstimationStatus } from '@/stores/estimations'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
@@ -24,6 +24,22 @@ onMounted(async () => {
     }
   }
 })
+
+function continueOrStartEstimation() {
+  const startingStoryId = estimation.value?.stories?.[0]?.uuid
+  const estimationStatus = estimation.value?.userEstimationStatus
+  const storiesWithoutEstimation = estimation?.value?.stories?.filter(
+    (story) => !story.estimation || !story.estimation.estimation,
+  )
+
+  // If estimation is in progress, navigate to the first story without estimation
+  if (estimationStatus === EstimationStatus.IN_PROGRESS && storiesWithoutEstimation) {
+    return storiesWithoutEstimation[0].uuid
+  } else {
+    // If no stories have estimations, navigate to the first story
+    return startingStoryId
+  }
+}
 </script>
 
 <template>
@@ -38,7 +54,18 @@ onMounted(async () => {
         <Panel v-if="estimation">
           <template #header>
             <div class="flex flex-col w-full">
-              <h4 class="font-bold text-xl mb-0">{{ estimation.title }}</h4>
+              <h4 class="font-bold text-xl mb-0">
+                {{ estimation.title }}
+                <Button
+                  as="a"
+                  variant="link"
+                  icon="pi pi-external-link"
+                  :href="estimation.link"
+                  target="_blank"
+                  rel="noopener"
+                  v-tooltip="{ value: 'View in Shortcut' }"
+                />
+              </h4>
               <Divider />
             </div>
           </template>
@@ -62,11 +89,36 @@ onMounted(async () => {
                 <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
               </template>
             </Column>
-            <Column field="title" header="Title"></Column>
+            <Column field="title" header="Title">
+              <template #body="slotProps">
+                <RouterLink
+                  :to="{
+                    name: 'storyView',
+                    params: { storyId: slotProps.data.uuid, epicId: estimation.uuid },
+                  }"
+                  class="underline"
+                >
+                  {{ slotProps.data.title }}
+                </RouterLink>
+              </template>
+            </Column>
             <Column field="description" header="Description"></Column>
-            <Column field="story_points" header="My Estimations">
+            <Column field="story_points" header="My Estimations" class="w-40">
               <template #body="slotProps">
                 {{ slotProps.data?.estimation?.estimation || 0 }}
+              </template>
+            </Column>
+            <Column class="w-20 !text-end">
+              <template #body="{ data }">
+                <Button
+                  as="a"
+                  variant="link"
+                  icon="pi pi-external-link"
+                  :href="data.link"
+                  target="_blank"
+                  rel="noopener"
+                  v-tooltip="{ value: 'View in Shortcut' }"
+                />
               </template>
             </Column>
           </DataTable>
@@ -81,7 +133,7 @@ onMounted(async () => {
         <RouterLink
           :to="{
             name: 'storyView',
-            params: { storyId: estimation.stories[0].uuid, epicId: estimation.uuid },
+            params: { storyId: continueOrStartEstimation(), epicId: estimation.uuid },
           }"
           :class="slotProps.class"
           >{{
