@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useTeamsStore } from '@/stores/teams'
 import { useRolesStore } from '@/stores/roles'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
@@ -10,7 +10,7 @@ import { useToast } from 'primevue/usetoast'
 const toast = useToast()
 const teamsStore = useTeamsStore()
 const rolesStore = useRolesStore()
-const userSessionStore = useUserSessionStore()
+const userStore = useUserStore()
 const { showCreateUserDialog } = defineProps({
   showCreateUserDialog: {
     type: Boolean,
@@ -88,7 +88,7 @@ function togglePasswordVisibility() {
 async function createUser({ valid, values }) {
   if (valid) {
     loading.value = true
-    const result = await userSessionStore.createUser(values)
+    const result = await userStore.createUser(values)
 
     if (result && result !== null) {
       createUserError.value = result

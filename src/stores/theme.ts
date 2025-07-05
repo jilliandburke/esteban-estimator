@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 
 export const useThemeStore = defineStore('theme', () => {
   const root = document.getElementsByTagName('html')[0]
   const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)')
   const prefersLightTheme = window.matchMedia('(prefers-color-scheme: light)')
   const currentTheme = ref<'system' | 'light' | 'dark'>('dark')
-  const userSessionStore = useUserSessionStore()
+  const userStore = useUserStore()
 
   function setSystemTheme() {
     if (prefersDarkTheme.matches) {
@@ -30,7 +30,7 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   async function setAppTheme() {
-    const currentUser = userSessionStore.currentUser
+    const currentUser = userStore.currentUser
 
     if (!currentUser) {
       setSystemTheme()

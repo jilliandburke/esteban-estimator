@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,11 +48,11 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  const userSessionStore = useUserSessionStore()
+  const userStore = useUserStore()
 
   if (
     // make sure the user is authenticated
-    !userSessionStore.isLoggedIn &&
+    !userStore.isLoggedIn &&
     // ❗️ Avoid an infinite redirect
     to.name !== 'login'
   ) {

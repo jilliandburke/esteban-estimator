@@ -26,8 +26,8 @@ export type User = {
   roles: Role[]
 }
 
-export const useUserSessionStore = defineStore(
-  'userSession',
+export const useUserStore = defineStore(
+  'user',
   () => {
     const currentUser = ref<null | User>(null)
     const allUsers = ref<User[] | null>(null)
@@ -42,6 +42,13 @@ export const useUserSessionStore = defineStore(
 
     const listAllUsers = computed(() => {
       return allUsers.value
+    })
+
+    const avatarLink = computed(() => {
+      return (
+        currentUser.value?.avatar_url ||
+        'https://static1.personalitydatabase.net/2/pdb-images-prod/b805995f/profile_images/c192170f01b245a1a180eb77aa6bb40f.png'
+      )
     })
 
     function resetGetUserError() {
@@ -81,9 +88,10 @@ export const useUserSessionStore = defineStore(
     }
 
     async function updateUser(userData: {
-      email: string
-      name: string
-      theme: 'system' | 'light' | 'dark'
+      email?: string
+      name?: string
+      avatar_url?: string
+      theme?: 'system' | 'light' | 'dark'
     }) {
       if (userData && currentUser.value) {
         const userId = currentUser.value.id
@@ -93,9 +101,10 @@ export const useUserSessionStore = defineStore(
         const { error } = await supabase
           .from('profiles')
           .update({
-            email: userData.email,
-            full_name: userData.name,
-            theme: userData.theme,
+            email: userData.email || currentUser.value.email,
+            full_name: userData.name || currentUser.value.full_name,
+            avatar_url: userData.avatar_url || currentUser.value.avatar_url,
+            theme: userData.theme || currentUser.value.theme,
           })
           .eq('id', userId)
 
@@ -167,12 +176,38 @@ export const useUserSessionStore = defineStore(
       }
     }
 
+    async function uploadAvatar(file: any) {
+      const fileName = `avatar-${currentUser.value?.id}-${Date.now()}.${file.type.split('/').pop()}`
+
+      const { data: uploadData, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true })
+
+      if (error) {
+        console.error('Error uploading avatar:', error)
+        return error
+      } else {
+        const { data: avatarUrl } = supabase.storage.from('avatars').getPublicUrl(uploadData.path)
+
+        currentUser.value!.avatar_url = avatarUrl.publicUrl
+        const result = await updateUser({ avatar_url: avatarUrl.publicUrl })
+
+        if (result) {
+          return result
+        }
+
+        return null
+      }
+    }
+
     return {
       getUser,
       updateUser,
       getAllUsers,
       createUser,
       getUsersWithRole,
+      uploadAvatar,
+      avatarLink,
       getUserError,
       isLoggedIn,
       currentUser,

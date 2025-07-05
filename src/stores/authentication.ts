@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import { useTeamsStore } from '@/stores/teams'
 import { useRolesStore } from '@/stores/roles'
 import { useSettingsStore } from '@/stores/settings'
@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const loginError = ref<null | string>(null)
   const logoutError = ref<null | string>(null)
-  const userSessionStore = useUserSessionStore()
+  const userStore = useUserStore()
   const teamStore = useTeamsStore()
   const rolesStore = useRolesStore()
   const settingsStore = useSettingsStore()
@@ -52,8 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
         return
       } else {
         // Initialize App
-        await userSessionStore.getUser()
-        await userSessionStore.getAllUsers()
+        await userStore.getUser()
+        await userStore.getAllUsers()
         await teamStore.getAllTeams()
         await settingsStore.getSettings()
         await pointScaleStore.listPointScales()
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
       logoutError.value = error.message
       return
     } else {
-      userSessionStore.currentUser = null
+      userStore.currentUser = null
       resetLogoutError()
       router.push('/login')
     }

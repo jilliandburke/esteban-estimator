@@ -18,6 +18,7 @@ declare module 'vue' {
     DataTable: typeof import('primevue/datatable')['default']
     Dialog: typeof import('primevue/dialog')['default']
     Divider: typeof import('primevue/divider')['default']
+    FileUpload: typeof import('primevue/fileupload')['default']
     Form: typeof import('@primevue/forms/form')['default']
     Image: typeof import('primevue/image')['default']
     InputGroup: typeof import('primevue/inputgroup')['default']

@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import logo from '@/assets/logo.svg'
 
-const userSessionStore = useUserSessionStore()
-const avatarLink =
-  userSessionStore.currentUser?.avatar_url ||
-  'https://static1.personalitydatabase.net/2/pdb-images-prod/b805995f/profile_images/c192170f01b245a1a180eb77aa6bb40f.png'
+const userStore = useUserStore()
 
 const navItems = ref([
   {
@@ -53,7 +50,7 @@ const toggle = (event: unknown) => {
     </template>
     <template #end>
       <div class="flex items-center gap-2">
-        <Avatar :image="avatarLink" shape="circle" size="large" @click="toggle" />
+        <Avatar :image="userStore.avatarLink" shape="circle" size="large" @click="toggle" />
         <Menu ref="menu" id="overlay_menu" :model="profileItems" :popup="true">
           <template #item="{ item, props }">
             <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>

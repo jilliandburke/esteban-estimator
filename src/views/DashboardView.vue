@@ -1,28 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import { useEstimationsStore } from '@/stores/estimations'
 import AlertBanner from '@/components/AlertBanner.vue'
 import VueMarkdown from 'vue-markdown-render'
 
-const userSessionStore = useUserSessionStore()
+const userStore = useUserStore()
 const estimationsStore = useEstimationsStore()
-const isAdmin = userSessionStore?.currentUser?.roles[0]?.name === 'admin'
+const isAdmin = userStore?.currentUser?.roles[0]?.name === 'admin'
 const routeName = ref('epicOverview')
 
 if (isAdmin) {
   routeName.value = 'adminReview'
 }
 
-userSessionStore.getUser()
+userStore.getUser()
 </script>
 
 <template>
-  <AlertBanner
-    v-if="userSessionStore.getUserError"
-    :message="userSessionStore.getUserError"
-    variant="danger"
-  />
+  <AlertBanner v-if="userStore.getUserError" :message="userStore.getUserError" variant="danger" />
 
   <div class="flex flex-col h-full p-10 mx-6 gap-20">
     <div class="flex flex-col gap-4">

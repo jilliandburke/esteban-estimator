@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 
-const userSessionStore = useUserSessionStore()
+const userStore = useUserStore()
 const toast = useToast()
 const loading = ref(false)
+const uploading = ref(false)
 
 const resolver = zodResolver(
   z.object({
@@ -27,16 +28,16 @@ const themeOptions = ref<{ name: string; code: string }[]>([
 ])
 
 const defaultTheme = computed(() => {
-  if (userSessionStore.currentUser) {
-    return themeOptions.value.find((theme) => theme.code === userSessionStore?.currentUser?.theme)
+  if (userStore.currentUser) {
+    return themeOptions.value.find((theme) => theme.code === userStore?.currentUser?.theme)
   } else {
     return themeOptions.value[0].code
   }
 })
 
 const initialValues = ref({
-  email: userSessionStore?.currentUser?.email,
-  name: userSessionStore?.currentUser?.full_name,
+  email: userStore?.currentUser?.email,
+  name: userStore?.currentUser?.full_name,
   theme: defaultTheme.value,
 })
 
@@ -51,7 +52,7 @@ const onFormSubmit = async ({ valid, values }) => {
       theme: values.theme.code,
     }
 
-    const result = await userSessionStore.updateUser(userData)
+    const result = await userStore.updateUser(userData)
 
     if (result && result !== null) {
       loading.value = false
@@ -63,16 +64,53 @@ const onFormSubmit = async ({ valid, values }) => {
     toast.add({ severity: 'success', summary: 'User succssfully updated!', life: 3000 })
   }
 }
+
+const uploadAvatar = async (event: { files: any[] }) => {
+  uploading.value = true
+  const file = event.files[0]
+
+  if (!file) {
+    toast.add({ severity: 'error', summary: 'No file selected', life: 3000 })
+    uploading.value = false
+    return
+  }
+
+  try {
+    const result = await userStore.uploadAvatar(file)
+
+    if (result && result !== null) {
+      toast.add({ severity: 'error', summary: 'Error', detail: `${result}`, life: 3000 })
+      uploading.value = false
+      return
+    }
+
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Avatar uploaded successfully!',
+      life: 3000,
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Success',
+      detail: `Error uploading avatar: ${error}`,
+      life: 3000,
+    })
+  } finally {
+    uploading.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="flex p-6 gap-10 w-full">
+  <div class="flex flex-col md:flex-row p-6 gap-10 w-full">
     <Form
       v-slot="$form"
       :initialValues
       :resolver
       @submit="onFormSubmit"
-      class="flex flex-col gap-4 w-full lg:w-1/2"
+      class="flex flex-col gap-4 w-full md:w-1/2 lg:w-1/2"
     >
       <!-- Name -->
       <div class="flex flex-col gap-1">
@@ -125,22 +163,34 @@ const onFormSubmit = async ({ valid, values }) => {
           $form.theme?.error?.message
         }}</Message>
       </div>
-      <Button type="submit" label="Save Changes" :loading="loading" class="md:w-1/3 mt-6" />
+      <Button
+        type="submit"
+        label="Save Changes"
+        :loading="loading"
+        class="w-full md:w-1/2 lg:w-1/3 mt-6"
+      />
     </Form>
 
-    <!-- FIX/IMPLEMENT USER AVATAR UPLOAD LATER -->
-    <!-- <div class="flex flex-col gap-4 mt-6"> -->
-    <!--   <img v-if="avatarLink" :src="avatarLink" alt="Image" class="shadow-md rounded-xl w-36" /> -->
-    <!--   <FileUpload -->
-    <!--     mode="basic" -->
-    <!--     name="demo[]" -->
-    <!--     url="/api/upload" -->
-    <!--     accept="image/*" -->
-    <!--     :maxFileSize="1000000" -->
-    <!--     chooseIcon="pi pi-upload" -->
-    <!--     :auto="true" -->
-    <!--     chooseLabel="Upload" -->
-    <!--   /> -->
-    <!-- </div> -->
+    <div class="flex flex-row items-center md:flex-col gap-4 mt-6 md:w-50">
+      <div class="max-w-60">
+        <img
+          v-if="userStore.avatarLink"
+          :src="userStore.avatarLink"
+          alt="Image"
+          class="shadow-md rounded-xl w-full"
+        />
+      </div>
+      <FileUpload
+        mode="basic"
+        name="demo[]"
+        accept="image/*"
+        :maxFileSize="1000000"
+        chooseIcon="pi pi-upload"
+        @select="uploadAvatar"
+        :auto="true"
+        chooseLabel="Upload"
+        class="md:w-50"
+      />
+    </div>
   </div>
 </template>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import { useTeamsStore } from '@/stores/teams'
 
-const userSessionStore = useUserSessionStore()
+const userStore = useUserStore()
 const teamsStore = useTeamsStore()
 const showCreateUserDialog = ref(false)
 const showNewTeamDialog = ref(false)
@@ -35,7 +35,7 @@ function closeNewTeamDialog() {
           />
         </div>
         <DataTable
-          :value="userSessionStore.listAllUsers"
+          :value="userStore.listAllUsers"
           scrollable
           resizableColumns
           columnResizeMode="expand"

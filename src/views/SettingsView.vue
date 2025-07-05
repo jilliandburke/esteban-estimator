@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 
-const userSessionStore = useUserSessionStore()
-const isAdmin = userSessionStore?.currentUser?.roles[0]?.name === 'admin'
+const userStore = useUserStore()
+const isAdmin = userStore?.currentUser?.roles[0]?.name === 'admin'
 </script>
 
 <template>

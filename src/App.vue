@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { useThemeStore } from './stores/theme'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 
-const userSessionStore = useUserSessionStore()
+const userStore = useUserStore()
 const themeStore = useThemeStore()
 
 themeStore.setAppTheme()
@@ -13,7 +13,7 @@ themeStore.setAppTheme()
   <Suspense>
     <div>
       <Toast />
-      <NavBar v-if="userSessionStore.isLoggedIn" />
+      <NavBar v-if="userStore.isLoggedIn" />
       <RouterView :key="$route.path" />
     </div>
     <template #fallback>

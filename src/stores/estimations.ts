@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
-import { useUserSessionStore } from '@/stores/userSession'
+import { useUserStore } from '@/stores/user'
 import { useTeamsStore } from '@/stores/teams'
 import { useRouter } from 'vue-router'
 import { FunctionsHttpError, FunctionsRelayError, FunctionsFetchError } from '@supabase/supabase-js'
@@ -81,7 +81,7 @@ export const useEstimationsStore = defineStore(
     const stories = ref<Story[]>([])
     const getEstimationsError = ref<string | null>(null)
     const router = useRouter()
-    const userSessionStore = useUserSessionStore()
+    const userStore = useUserStore()
 
     const remainingEstimations = computed(() => {
       return estimations.value.filter(
@@ -106,7 +106,7 @@ export const useEstimationsStore = defineStore(
     async function getEstimations() {
       let error
       let mappedEstimations: Estimation[] = []
-      const user = userSessionStore.currentUser
+      const user = userStore.currentUser
 
       if (!user) return
 
@@ -156,7 +156,7 @@ export const useEstimationsStore = defineStore(
       }
 
       const storyCount = await getStoryCount(epicId)
-      const user = userSessionStore.currentUser
+      const user = userStore.currentUser
       const { count, error } = await supabase
         .from('estimations')
         .select('*', { count: 'exact', head: true })
@@ -217,7 +217,7 @@ export const useEstimationsStore = defineStore(
         return
       }
 
-      const user = userSessionStore.currentUser
+      const user = userStore.currentUser
 
       if (!user) return { data: null, error: 'No user found' }
 
@@ -259,7 +259,7 @@ export const useEstimationsStore = defineStore(
         for (const story of mappedStories) {
           const { data } = await supabase
             .from('estimations')
-            .select('*, profiles (full_name)')
+            .select('*, profiles (full_name, avatar_url)')
             .eq('story_id', story.uuid)
 
           if (data) {
@@ -283,7 +283,7 @@ export const useEstimationsStore = defineStore(
     }
 
     async function submitStoryEstimation(storyId: string, epicId: string, estimation: number) {
-      const user = userSessionStore.currentUser
+      const user = userStore.currentUser
 
       if (!user) return { data: null, error: 'No user found' }
 
@@ -397,7 +397,7 @@ export const useEstimationsStore = defineStore(
         } else {
           let createError = null
 
-          const adminList = userSessionStore.getUsersWithRole('admin')
+          const adminList = userStore.getUsersWithRole('admin')
 
           const { error } = await supabase.functions.invoke('slack-notifier', {
             body: {
