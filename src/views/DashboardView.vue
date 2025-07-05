@@ -62,7 +62,7 @@ userSessionStore.getUser()
 
       <!-- If no estimations at all -->
       <div
-        v-else-if="estimationsStore.estimations.length = 0"
+        v-else-if="estimationsStore.allEstimations.length === 0"
         class="flex items-center justify-center min-h-44 w-full"
       >
         <h3 class="text-xl">There have been no epics added yet</h3>

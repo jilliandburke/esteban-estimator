@@ -98,6 +98,9 @@ export const useEstimationsStore = defineStore(
       )
     })
 
+    const allEstimations = computed(() => {
+      return estimations.value
+    })
     async function getEstimations() {
       let error
       let mappedEstimations: Estimation[] = []
@@ -441,6 +444,7 @@ export const useEstimationsStore = defineStore(
       getEstimations,
       remainingEstimations,
       completedEstimations,
+      allEstimations,
       estimations,
       stories,
       getEstimationsError,
