@@ -51,6 +51,10 @@ export const useUserStore = defineStore(
       )
     })
 
+    const isAdmin = computed(() => {
+      return currentUser.value?.roles.some((role) => role.name?.toLowerCase() === 'admin') || false
+    })
+
     function resetGetUserError() {
       getUserError.value = null
     }
@@ -176,6 +180,48 @@ export const useUserStore = defineStore(
       }
     }
 
+    async function updateUserAuthData(userData: { email?: string; password?: string }) {
+      let updateData
+
+      if (userData.password) {
+        updateData = {
+          password: userData.password,
+        }
+      }
+
+      if (userData.email) {
+        updateData = {
+          ...updateData,
+          email: userData.email,
+        }
+      }
+
+      if (updateData) {
+        const { data: updatedAuthUser, error: updateAuthUserError } =
+          await supabase.auth.updateUser(updateData)
+
+        if (updateAuthUserError) {
+          return updateAuthUserError
+        }
+
+        if (updateData.email) {
+          const { error: updatedUserError } = await supabase
+            .from('profiles')
+            .update({
+              email: updateData.email,
+            })
+            .eq('id', updatedAuthUser.user.id)
+            .select()
+
+          if (updatedUserError) {
+            throw updatedUserError
+          }
+
+          await getUser()
+        }
+      }
+    }
+
     async function uploadAvatar(file: any) {
       const fileName = `avatar-${currentUser.value?.id}-${Date.now()}.${file.type.split('/').pop()}`
 
@@ -207,6 +253,8 @@ export const useUserStore = defineStore(
       createUser,
       getUsersWithRole,
       uploadAvatar,
+      updateUserAuthData,
+      isAdmin,
       avatarLink,
       getUserError,
       isLoggedIn,

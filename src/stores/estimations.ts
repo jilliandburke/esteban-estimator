@@ -62,6 +62,7 @@ export type Estimation = {
   team_id: string | null
   team_completed_estimation_at: string | null
   userEstimationStatus?: EstimationStatus
+  submitted_to_shortcut_at?: string | null
   stories?: Story[]
   storyCount?: number
   created_at: string
@@ -445,6 +446,24 @@ export const useEstimationsStore = defineStore(
       }
     }
 
+    async function updateEpic(epicId: string, submissionDate: Date) {
+      if (epicId && submissionDate) {
+        let updateError = null
+
+        const { error } = await supabase
+          .from('epics')
+          .update({ submitted_to_shortcut_at: submissionDate.toISOString() })
+          .eq('uuid', epicId)
+
+        if (error) {
+          updateError = `Failed to update user: ${error}`
+          return updateError
+        }
+
+        return updateError
+      }
+    }
+
     async function submitEstimationToShortcut(stories: Story[]) {
       if (stories) {
         let submissionError = null
@@ -464,6 +483,12 @@ export const useEstimationsStore = defineStore(
           }
 
           return submissionError
+        } else {
+          const result = await updateEpic(stories[0].epic_id, new Date())
+
+          if (result) {
+            return result
+          }
         }
 
         return submissionError

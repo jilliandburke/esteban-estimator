@@ -7,18 +7,47 @@ import { useToast } from 'primevue/usetoast'
 
 const userStore = useUserStore()
 const toast = useToast()
-const loading = ref(false)
+const submittingDisplaySettings = ref(false)
+const submittingLoginSettings = ref(false)
 const uploading = ref(false)
 
-const resolver = zodResolver(
+const displaySettingsResolver = zodResolver(
   z.object({
-    email: z.string().email(),
     name: z.string(),
     theme: z.object({
       name: z.string(),
       code: z.string(),
     }),
   }),
+)
+
+const loginSettingsResolver = zodResolver(
+  z
+    .object({
+      email: z.string().email(),
+      password: z
+        .string()
+        .min(3, { message: 'Minimum 3 characters.' })
+        .refine((value) => /[a-z]/.test(value), {
+          message: 'Must have a lowercase letter.',
+        })
+        .refine((value) => /[A-Z]/.test(value), {
+          message: 'Must have an uppercase letter.',
+        }),
+      passwordConfirmation: z
+        .string()
+        .min(3, { message: 'Minimum 3 characters.' })
+        .refine((value) => /[a-z]/.test(value), {
+          message: 'Must have a lowercase letter.',
+        })
+        .refine((value) => /[A-Z]/.test(value), {
+          message: 'Must have an uppercase letter.',
+        }),
+    })
+    .refine((data) => data.password === data.passwordConfirmation, {
+      message: 'Passwords do not match',
+      path: ['passwordConfirmation'],
+    }),
 )
 
 const themeOptions = ref<{ name: string; code: string }[]>([
@@ -35,19 +64,21 @@ const defaultTheme = computed(() => {
   }
 })
 
-const initialValues = ref({
-  email: userStore?.currentUser?.email,
+const displayInitialValues = ref({
   name: userStore?.currentUser?.full_name,
   theme: defaultTheme.value,
 })
 
+const loginInitialValues = ref({
+  email: userStore?.currentUser?.email,
+})
+
 // @ts-expect-error idk typings for this yet
-const onFormSubmit = async ({ valid, values }) => {
+const submitDisplaySettings = async ({ valid, values }) => {
   if (valid) {
-    loading.value = true
+    submittingDisplaySettings.value = true
 
     const userData = {
-      email: values.email,
       name: values.name,
       theme: values.theme.code,
     }
@@ -55,13 +86,48 @@ const onFormSubmit = async ({ valid, values }) => {
     const result = await userStore.updateUser(userData)
 
     if (result && result !== null) {
-      loading.value = false
+      submittingDisplaySettings.value = false
       toast.add({ severity: 'danger', summary: `${result}`, life: 3000 })
       return
     }
 
-    loading.value = false
+    submittingDisplaySettings.value = false
     toast.add({ severity: 'success', summary: 'User succssfully updated!', life: 3000 })
+  }
+}
+
+// @ts-expect-error idk typings for this yet
+const submitLoginSettings = async ({ valid, values }) => {
+  if (valid) {
+    submittingLoginSettings.value = true
+    let userData
+
+    // Only need password here because the form won't submit if passwordConfirmation is invalid
+    if (values.password) {
+      userData = {
+        password: values.password,
+      }
+    }
+
+    if (values.email) {
+      userData = {
+        ...userData,
+        email: values.email,
+      }
+    }
+
+    if (userData) {
+      const result = await userStore.updateUserAuthData(userData)
+
+      if (result && result !== null) {
+        submittingLoginSettings.value = false
+        toast.add({ severity: 'danger', summary: `${result}`, life: 3000 })
+        return
+      }
+
+      submittingLoginSettings.value = false
+      toast.add({ severity: 'success', summary: 'User succssfully updated!', life: 3000 })
+    }
   }
 }
 
@@ -105,92 +171,152 @@ const uploadAvatar = async (event: { files: any[] }) => {
 
 <template>
   <div class="flex flex-col md:flex-row p-6 gap-10 w-full">
-    <Form
-      v-slot="$form"
-      :initialValues
-      :resolver
-      @submit="onFormSubmit"
-      class="flex flex-col gap-4 w-full md:w-1/2 lg:w-1/2"
-    >
-      <!-- Name -->
-      <div class="flex flex-col gap-1">
-        <label for="name">Name</label>
-        <InputText
-          name="name"
-          type="text"
-          placeholder="Name"
-          :disabled="loading"
-          autocomplete="off"
-          fluid
-        />
-        <Message v-if="$form.name?.invalid" severity="error" size="small" variant="simple">{{
-          $form.name.error?.message
-        }}</Message>
-      </div>
-
-      <!-- Email -->
-      <div class="flex flex-col gap-2 w-full">
-        <label for="email" class="text-surface-900 dark:text-surface-0 font-medium leading-normal"
-          >Email Address</label
+    <div class="flex flex-col flex-wrap w-full gap-14">
+      <div class="flex w-full gap-20">
+        <Form
+          v-slot="$form"
+          :initialValues="displayInitialValues"
+          :resolver="displaySettingsResolver"
+          @submit="submitDisplaySettings"
+          class="flex flex-col gap-4 w-full md:w-1/2 lg:w-1/2"
         >
-        <InputText
-          name="email"
-          type="email"
-          placeholder="Email"
-          :disabled="loading"
-          autocomplete="email"
-          fluid
-        />
-        <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">{{
-          $form.email.error?.message
-        }}</Message>
-      </div>
+          <h3 class="font-bold text-xl">Display Settings</h3>
 
-      <!-- Implement Reset Password here -->
+          <!-- Name -->
+          <div class="flex flex-col gap-1">
+            <label for="name">Name</label>
+            <InputText
+              name="name"
+              type="text"
+              placeholder="Name"
+              :disabled="submittingDisplaySettings"
+              autocomplete="off"
+              fluid
+            />
+            <Message v-if="$form.name?.invalid" severity="error" size="small" variant="simple">{{
+              $form.name.error?.message
+            }}</Message>
+          </div>
 
-      <!-- App Theme -->
-      <div class="flex flex-col gap-1">
-        <label for="theme">Theme</label>
-        <Select
-          name="theme"
-          :options="themeOptions"
-          optionLabel="name"
-          placeholder="Select a theme"
-          :disabled="loading"
-          fluid
-        />
-        <Message v-if="$form.theme?.invalid" severity="error" size="small" variant="simple">{{
-          $form.theme?.error?.message
-        }}</Message>
-      </div>
-      <Button
-        type="submit"
-        label="Save Changes"
-        :loading="loading"
-        class="w-full md:w-1/2 lg:w-1/3 mt-6"
-      />
-    </Form>
+          <!-- App Theme -->
+          <div class="flex flex-col gap-1">
+            <label for="theme">Theme</label>
+            <Select
+              name="theme"
+              :options="themeOptions"
+              optionLabel="name"
+              placeholder="Select a theme"
+              :disabled="submittingDisplaySettings"
+              fluid
+            />
+            <Message v-if="$form.theme?.invalid" severity="error" size="small" variant="simple">{{
+              $form.theme?.error?.message
+            }}</Message>
+          </div>
+          <Button
+            type="submit"
+            label="Save Changes"
+            :loading="submittingDisplaySettings"
+            class="w-full md:w-1/2 lg:w-1/3 mt-6"
+          />
+        </Form>
 
-    <div class="flex flex-row items-center md:flex-col gap-4 mt-6 md:w-50">
-      <div class="max-w-60">
-        <img
-          v-if="userStore.avatarLink"
-          :src="userStore.avatarLink"
-          alt="Image"
-          class="shadow-md rounded-xl w-full"
-        />
+        <div class="flex flex-row items-center md:flex-col gap-4 mt-16 md:w-50">
+          <div class="max-w-60">
+            <img
+              v-if="userStore.avatarLink"
+              :src="userStore.avatarLink"
+              alt="Image"
+              class="shadow-md rounded-xl w-full"
+            />
+          </div>
+          <FileUpload
+            mode="basic"
+            name="demo[]"
+            accept="image/*"
+            :maxFileSize="1000000"
+            chooseIcon="pi pi-upload"
+            @select="uploadAvatar"
+            :auto="true"
+            chooseLabel="Upload"
+            class="md:w-50"
+          />
+        </div>
       </div>
-      <FileUpload
-        mode="basic"
-        name="demo[]"
-        accept="image/*"
-        :maxFileSize="1000000"
-        chooseIcon="pi pi-upload"
-        @select="uploadAvatar"
-        :auto="true"
-        chooseLabel="Upload"
-        class="md:w-50"
-      />
+      <Form
+        v-slot="$form"
+        :initialValues="loginInitialValues"
+        :resolver="loginSettingsResolver"
+        @submit="submitLoginSettings"
+        class="flex flex-col gap-4 w-full md:w-1/2 lg:w-1/2"
+      >
+        <h3 class="font-bold text-xl">Login Settings</h3>
+
+        <!-- Email -->
+        <div class="flex flex-col gap-2 w-full">
+          <label for="email" class="text-surface-900 dark:text-surface-0 font-medium leading-normal"
+            >Email Address</label
+          >
+          <InputText
+            name="email"
+            type="email"
+            placeholder="Email"
+            :disabled="submittingLoginSettings"
+            autocomplete="email"
+            fluid
+          />
+          <Message v-if="$form.email?.invalid" severity="error" size="small" variant="simple">{{
+            $form.email.error?.message
+          }}</Message>
+        </div>
+
+        <!-- Reset Password -->
+        <!-- New -->
+        <div class="flex flex-col gap-1">
+          <label for="name">Password</label>
+          <InputText
+            name="password"
+            type="password"
+            placeholder="New password"
+            :disabled="submittingLoginSettings"
+            autocomplete="off"
+            fluid
+          />
+          <Message v-if="$form.password?.invalid" severity="error" size="small" variant="simple">{{
+            $form.password.error?.message
+          }}</Message>
+          <Message size="small" severity="secondary" variant="simple">
+            Updating this will reset your current password.
+          </Message>
+        </div>
+
+        <!-- New Confirmed -->
+        <div class="flex flex-col gap-1">
+          <label for="name">Password Confirmation</label>
+          <InputText
+            name="passwordConfirmation"
+            type="password"
+            placeholder="Confirm password"
+            :disabled="submittingLoginSettings"
+            autocomplete="off"
+            fluid
+          />
+          <Message
+            v-if="$form.passwordConfirmation?.invalid"
+            severity="error"
+            size="small"
+            variant="simple"
+            >{{ $form.passwordConfirmation.error?.message }}</Message
+          >
+        </div>
+
+        <Button
+          type="submit"
+          label="Save Changes"
+          :loading="submittingLoginSettings"
+          class="w-full md:w-1/2 lg:w-1/3 mt-6"
+        />
+      </Form>
     </div>
   </div>
 </template>

@@ -1,24 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useEstimationsStore } from '@/stores/estimations'
-import AlertBanner from '@/components/AlertBanner.vue'
 import VueMarkdown from 'vue-markdown-render'
 
 const userStore = useUserStore()
 const estimationsStore = useEstimationsStore()
-const isAdmin = userStore?.currentUser?.roles[0]?.name === 'admin'
-const routeName = ref('epicOverview')
 
-if (isAdmin) {
-  routeName.value = 'adminReview'
-}
+const routeName = computed(() => {
+  return userStore.isAdmin ? 'adminReview' : 'epicOverview'
+})
 
 userStore.getUser()
 </script>
 
 <template>
-  <AlertBanner v-if="userStore.getUserError" :message="userStore.getUserError" variant="danger" />
+  <Message v-if="userStore.getUserError" severity="error" icon="pi pi-times-circle">
+    {{ userStore.getUserError }}
+  </Message>
 
   <div class="flex flex-col h-full p-10 mx-6 gap-20">
     <div class="flex flex-col gap-4">

@@ -2,7 +2,6 @@
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { ref } from 'vue'
-import AlertBanner from '@/components/AlertBanner.vue'
 import { useAuthStore } from '@/stores/authentication'
 import logo from '@/assets/logo.svg'
 
@@ -44,7 +43,9 @@ const resolver = zodResolver(
         </div>
       </div>
       <div class="flex flex-col gap-6 w-full">
-        <AlertBanner v-if="authStore.loginError" :message="authStore.loginError" variant="danger" />
+        <Message v-if="authStore.loginError" severity="error" icon="pi pi-times-circle">
+          {{ authStore.loginError }}
+        </Message>
         <Form
           v-slot="$form"
           :initialValues

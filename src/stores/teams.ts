@@ -62,6 +62,8 @@ export const useTeamsStore = defineStore(
         } else {
           return false
         }
+      } else {
+        return false
       }
     }
 

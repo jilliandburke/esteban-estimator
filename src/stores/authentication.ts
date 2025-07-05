@@ -48,6 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
       })
 
       if (error) {
+        loginLoading.value = false
         loginError.value = error.message
         return
       } else {
