@@ -57,6 +57,7 @@ async function submitToShortcut() {
     return
   }
 
+  estimation.value = await estimationStore.getEstimation(route.params.id as string)
   toast.add({
     severity: 'success',
     summary: 'Success',
@@ -211,6 +212,9 @@ async function onCellEditComplete(event: any) {
     <div
       class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
     >
+      <p class="text-sm text-surface-500 mr-4" v-if="estimation?.submitted_to_shortcut_at">
+        Last submitted at {{ format(estimation.submitted_to_shortcut_at, 'h:m a, LLL d, yyyy') }}
+      </p>
       <Button label="Submit to Shortcut" :loading="loading" @click="submitToShortcut()" />
     </div>
   </div>

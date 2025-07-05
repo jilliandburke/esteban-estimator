@@ -17,6 +17,7 @@ export type Database = {
           link: string | null
           shortcut_id: string | null
           story_count: number | null
+          submitted_to_shortcut_at: string | null
           team_completed_estimation_at: string | null
           team_id: string
           title: string | null
@@ -30,6 +31,7 @@ export type Database = {
           link?: string | null
           shortcut_id?: string | null
           story_count?: number | null
+          submitted_to_shortcut_at?: string | null
           team_completed_estimation_at?: string | null
           team_id: string
           title?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           link?: string | null
           shortcut_id?: string | null
           story_count?: number | null
+          submitted_to_shortcut_at?: string | null
           team_completed_estimation_at?: string | null
           team_id?: string
           title?: string | null
