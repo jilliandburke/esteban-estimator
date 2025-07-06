@@ -50,6 +50,7 @@ const toggle = (event: unknown) => {
     </template>
     <template #end>
       <div class="flex items-center gap-2">
+        <p class="mr-2">Hello, {{ userStore.currentUser?.full_name?.split(' ')[0] }}!</p>
         <Avatar :image="userStore.avatarLink" shape="circle" size="large" @click="toggle" />
         <Menu ref="menu" id="overlay_menu" :model="profileItems" :popup="true">
           <template #item="{ item, props }">
