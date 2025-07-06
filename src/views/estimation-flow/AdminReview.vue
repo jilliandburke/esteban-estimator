@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useEstimationsStore, type Estimation, type Story } from '@/stores/estimations'
 import { usePointScaleStore } from '@/stores/pointScales'
+import { useTeamsStore, type Team } from '@/stores/teams'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
@@ -10,6 +11,8 @@ import { format } from 'date-fns'
 const route = useRoute()
 const estimationStore = useEstimationsStore()
 const pointScaleStore = usePointScaleStore()
+const teamsStore = useTeamsStore()
+const team = ref<Team | null>(null)
 const estimation = ref<Estimation | undefined>(undefined)
 const toast = useToast()
 const stories = ref<Story[]>([])
@@ -33,6 +36,8 @@ const estimationOptions = computed(() => {
 onMounted(async () => {
   if (route.params.id) {
     estimation.value = await estimationStore.getEstimation(route.params.id as string)
+    const result = await teamsStore.getTeamByEpicId(route.params.id as string)
+    team.value = result.data
 
     if (!estimation.value) {
       loading.value = false
@@ -92,6 +97,10 @@ async function onCellEditComplete(event: any) {
     life: 3000,
   })
 }
+
+// function calculatePercentage(estimations: number) {
+//   return Math.round((estimations / (team.value?.member_count || 0)) * 100)
+// }
 </script>
 
 <template>
@@ -144,14 +153,32 @@ async function onCellEditComplete(event: any) {
             @cell-edit-complete="onCellEditComplete"
             tableStyle="min-width: 50rem"
           >
-            <Column expander style="width: 5rem" />
-            <Column field="shortcut_id" header="ID">
+            <Column expander style="width: 3rem" />
+            <Column field="shortcut_id" header="ID" class="min-w-30">
               <template #body="slotProps">
                 <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
               </template>
             </Column>
             <Column field="title" header="Title"></Column>
-            <Column field="description" header="Description"></Column>
+            <Column field="description" header="Description" class="w-2/5">
+              <template #body="slotProps">
+                <ScrollPanel style="width: 100%; height: 50px">
+                  <p class="m-0 text-ellipsis h-[3.125rem]">
+                    <vue-markdown
+                      :source="slotProps.data.description.slice(13)"
+                      :options="{ breaks: true }"
+                    />
+                  </p>
+                </ScrollPanel>
+              </template>
+            </Column>
+            <!-- <Column field="state" header="Progress" style="width: 15%"> -->
+            <!--   <template #body="slotProps"> -->
+            <!--     <ProgressBar -->
+            <!--       :value="calculatePercentage(slotProps.data.estimations.length)" -->
+            <!--     ></ProgressBar> -->
+            <!--   </template> -->
+            <!-- </Column> -->
             <Column field="story_points" header="Story Points" style="width: 20%">
               <template #editor="{ data, field }">
                 <Select
@@ -210,7 +237,7 @@ async function onCellEditComplete(event: any) {
       </div>
     </div>
     <div
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 z-50"
     >
       <p class="text-sm text-surface-500 mr-4" v-if="estimation?.submitted_to_shortcut_at">
         Last submitted at {{ format(estimation.submitted_to_shortcut_at, 'h:m a, LLL d, yyyy') }}
