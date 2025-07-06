@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     }
 
     const storiesFiltered = storiesData.filter((story) => {
-      return !story.archived
+      return !story.archived && !story.completed_at
     })
 
     // Store Stories in Supabase
