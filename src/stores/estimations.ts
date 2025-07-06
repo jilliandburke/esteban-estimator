@@ -11,7 +11,7 @@ export type Story = {
   uuid: string
   title: string | null
   description: string | null
-  shortcut_id: string | null
+  shortcut_id: string
   story_points: number | null
   epic_id: string
   estimation?: {
@@ -35,6 +35,21 @@ export type Story = {
     created_at: string
     updated_at: string
   }[]
+  blocked: boolean
+  blocks: boolean
+  story_links?: StoryLink[]
+  created_at: string
+  updated_at: string
+}
+
+export type StoryLink = {
+  id: number
+  uuid: string
+  shortcut_id: string | null
+  object_id: string | null
+  subject_id: string | null
+  type: string | null
+  verb: string | null
   created_at: string
   updated_at: string
 }
@@ -222,15 +237,37 @@ export const useEstimationsStore = defineStore(
 
       if (mappedStories) {
         for (const story of mappedStories) {
-          const { data } = await supabase
+          const { data: estimationData } = await supabase
             .from('estimations')
             .select()
             .eq('story_id', story.uuid)
             .eq('user_id', user.id)
             .maybeSingle()
 
-          if (data) {
-            story.estimation = data
+          // Get story links where this story is the subject
+          const { data: subjectLinks } = await supabase
+            .from('story_links')
+            .select()
+            .eq('subject_id', story.shortcut_id)
+            .eq('type', 'subject')
+
+          // Get story links where this story is the object
+          const { data: objectLinks } = await supabase
+            .from('story_links')
+            .select()
+            .eq('object_id', story.shortcut_id)
+            .eq('type', 'object')
+
+          if (estimationData) {
+            story.estimation = estimationData
+          }
+
+          if (subjectLinks) {
+            story.story_links = [...(story.story_links || []), ...subjectLinks]
+          }
+
+          if (objectLinks) {
+            story.story_links = [...(story.story_links || []), ...objectLinks]
           }
         }
       }

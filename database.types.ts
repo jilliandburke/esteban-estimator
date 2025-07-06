@@ -268,7 +268,7 @@ export type Database = {
           description: string | null
           epic_id: string
           id: number
-          shortcut_id: string | null
+          shortcut_id: string
           story_points: number | null
           title: string | null
           updated_at: string
@@ -279,7 +279,7 @@ export type Database = {
           description?: string | null
           epic_id?: string
           id?: number
-          shortcut_id?: string | null
+          shortcut_id: string
           story_points?: number | null
           title?: string | null
           updated_at?: string
@@ -290,7 +290,7 @@ export type Database = {
           description?: string | null
           epic_id?: string
           id?: number
-          shortcut_id?: string | null
+          shortcut_id?: string
           story_points?: number | null
           title?: string | null
           updated_at?: string
@@ -305,6 +305,42 @@ export type Database = {
             referencedColumns: ["uuid"]
           },
         ]
+      }
+      story_links: {
+        Row: {
+          created_at: string
+          id: number
+          object_id: string
+          shortcut_id: string
+          subject_id: string
+          type: string
+          updated_at: string
+          uuid: string
+          verb: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          object_id: string
+          shortcut_id: string
+          subject_id: string
+          type: string
+          updated_at?: string
+          uuid?: string
+          verb?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          object_id?: string
+          shortcut_id?: string
+          subject_id?: string
+          type?: string
+          updated_at?: string
+          uuid?: string
+          verb?: string | null
+        }
+        Relationships: []
       }
       teams: {
         Row: {

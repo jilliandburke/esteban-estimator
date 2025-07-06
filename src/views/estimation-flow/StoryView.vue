@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useEstimationsStore, type Story } from '@/stores/estimations'
+import { useEstimationsStore, type Story, type StoryLink } from '@/stores/estimations'
 import { usePointScaleStore } from '@/stores/pointScales'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -57,6 +57,14 @@ const isLastStory = computed(() => {
 
   return activeStory?.value?.order === lastStory.order
 })
+
+function getStoryByShortcutId(shortcutId: string) {
+  return stories.value.find((item) => item.story.shortcut_id === shortcutId)?.story
+}
+
+function isBlocked(item: StoryLink, storyId: string) {
+  return item.object_id === storyId && item.type === 'object'
+}
 
 function initializePage() {
   if (route.params.storyId) {
@@ -138,7 +146,6 @@ function goToPreviousStory() {
     <div class="flex flex-col md:flex-row md:gap-10 w-full max-w-7xl mb-30">
       <div class="flex flex-col gap-4 md:w-1/2">
         <h3 class="font-bold text-2xl pl-4">Story Overview</h3>
-
         <Panel v-if="story">
           <template #header>
             <div class="flex flex-col w-full">
@@ -149,6 +156,72 @@ function goToPreviousStory() {
           <p class="-mt-5">
             <vue-markdown :source="story.description" :options="{ breaks: true }" />
           </p>
+          <div class="flex flex-col w-full mt-10">
+            <h4 class="font-bold mb-0">Story Relationships</h4>
+            <Divider />
+
+            <!-- This code is horrendous I'm so sorry to whoever finds themselves here -->
+            <DataView :value="story.story_links" v-if="story.story_links?.length !== 0">
+              <template #list="slotProps">
+                <div class="flex flex-col gap-2 px-3">
+                  <div v-for="(item, index) in slotProps.items" :key="index">
+                    <div class="flex gap-4 justify-between w-full">
+                      <div class="flex items-center gap-3">
+                        <Tag
+                          :severity="isBlocked(item, story.shortcut_id) ? 'danger' : 'warning'"
+                          class="flex items-center"
+                        >
+                          <i
+                            v-if="isBlocked(item, story.shortcut_id)"
+                            class="pi pi-ban text-3xl font-bold"
+                          ></i>
+                          <i v-else class="pi pi-exclamation-triangle text-3xl font-bold"></i>
+                        </Tag>
+                        <div>
+                          {{ isBlocked(item, story.shortcut_id) ? 'Blocked by' : 'Blocks' }}
+                          <RouterLink
+                            v-if="
+                              getStoryByShortcutId(
+                                isBlocked(item, story.shortcut_id)
+                                  ? item.subject_id
+                                  : item.object_id,
+                              )
+                            "
+                            :to="{
+                              name: 'storyView',
+                              params: {
+                                storyId: getStoryByShortcutId(
+                                  isBlocked(item, story.shortcut_id)
+                                    ? item.subject_id
+                                    : item.object_id,
+                                )?.uuid,
+                                epicId: getStoryByShortcutId(
+                                  isBlocked(item, story.shortcut_id)
+                                    ? item.subject_id
+                                    : item.object_id,
+                                )?.epic_id,
+                              },
+                            }"
+                            class="text-surface-300 hover:underline"
+                          >
+                            {{
+                              getStoryByShortcutId(
+                                isBlocked(item, story.shortcut_id)
+                                  ? item.subject_id
+                                  : item.object_id,
+                              )?.title
+                            }}
+                          </RouterLink>
+                        </div>
+                      </div>
+                      <Tag :value="`sc-${item.object_id}`" severity="info"></Tag>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </DataView>
+            <div v-else>No relationships</div>
+          </div>
         </Panel>
       </div>
       <div class="flex flex-col gap-3 md:pl-4 mt-10 md:w-1/2">

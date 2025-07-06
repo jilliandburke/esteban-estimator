@@ -84,25 +84,45 @@ function continueOrStartEstimation() {
             </div>
           </template>
           <DataTable :value="estimation.stories" size="large" tableStyle="min-width: 50rem">
-            <Column header="ID">
+            <Column header="ID" class="min-w-30">
               <template #body="slotProps">
                 <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
               </template>
             </Column>
             <Column field="title" header="Title">
               <template #body="slotProps">
-                <RouterLink
-                  :to="{
-                    name: 'storyView',
-                    params: { storyId: slotProps.data.uuid, epicId: estimation.uuid },
-                  }"
-                  class="underline"
-                >
-                  {{ slotProps.data.title }}
-                </RouterLink>
+                <span class="inline-flex items-center gap-2">
+                  <RouterLink
+                    :to="{
+                      name: 'storyView',
+                      params: { storyId: slotProps.data.uuid, epicId: estimation.uuid },
+                    }"
+                  >
+                    <span class="underline mr-2">{{ slotProps.data.title }}</span>
+                    <span class="inline-flex gap-1">
+                      <Tag v-if="slotProps.data.blocked" icon="pi pi-ban" severity="danger"></Tag>
+                      <Tag
+                        v-if="slotProps.data.blocker"
+                        icon="pi pi-exclamation-triangle"
+                        severity="warning"
+                      ></Tag>
+                    </span>
+                  </RouterLink>
+                </span>
               </template>
             </Column>
-            <Column field="description" header="Description"></Column>
+            <Column field="description" header="Description" class="w-2/5">
+              <template #body="slotProps">
+                <ScrollPanel style="width: 100%; height: 50px">
+                  <p class="m-0 text-ellipsis h-[3.125rem]">
+                    <vue-markdown
+                      :source="slotProps.data.description.slice(13)"
+                      :options="{ breaks: true }"
+                    />
+                  </p>
+                </ScrollPanel>
+              </template>
+            </Column>
             <Column field="story_points" header="My Estimations" class="w-40">
               <template #body="slotProps">
                 {{ slotProps.data?.estimation?.estimation || 0 }}
@@ -127,7 +147,7 @@ function continueOrStartEstimation() {
     </div>
     <div
       v-if="estimation && estimation.stories && !isReview"
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 z-50"
     >
       <Button asChild v-slot="slotProps">
         <RouterLink

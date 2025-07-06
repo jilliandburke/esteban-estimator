@@ -3,6 +3,12 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
+interface StoryLinkResults {
+  success: boolean
+  linkId: number
+  error?: string
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -118,13 +124,19 @@ Deno.serve(async (req) => {
       throw new Error(`Database upsert error: ${epicUpsertError.message}`)
     }
 
+    const storiesFiltered = storiesData.filter((story) => {
+      return !story.archived
+    })
+
     // Store Stories in Supabase
-    const storiesUpsertData = storiesData.map((story) => ({
+    const storiesUpsertData = storiesFiltered.map((story) => ({
       shortcut_id: story.id,
       title: story.name,
       description: story.description,
       link: story.app_url,
       epic_id: epicUpsertData[0].uuid,
+      blocked: story.blocked,
+      blocker: story.blocker,
     }))
 
     const { data: storiesUpsertResult, error: storiesUpsertError } = await supabaseClient
@@ -134,6 +146,54 @@ Deno.serve(async (req) => {
 
     if (storiesUpsertError) {
       throw storiesUpsertError
+    }
+
+    // Upsert story_links
+    const results: StoryLinkResults[] = []
+    const errors: string[] = []
+
+    // For each story in stories, loop through story.links and upsert them
+    for (const story of storiesData) {
+      for (const link of story.story_links || []) {
+        const linkData = {
+          shortcut_id: link.id,
+          object_id: link.object_id,
+          subject_id: link.subject_id,
+          type: link.type,
+          verb: link.verb,
+        }
+
+        const { data: storyLinkUpsertResult, error: storyLinkUpsertError } = await supabaseClient
+          .from('story_links')
+          .upsert(linkData, {
+            onConflict: 'object_id, subject_id, type',
+            ignoreDuplicates: false,
+          })
+          .select()
+
+        if (storyLinkUpsertError) {
+          console.error(`Error processing recipient ${link.id}:`, storyLinkUpsertError)
+
+          // Add failed result
+          results.push({
+            success: false,
+            linkId: link.id,
+            error: storyLinkUpsertError.message,
+          })
+
+          errors.push(`${link.id}: ${storyLinkUpsertError.message}`)
+        } else {
+          // Add successful result
+          results.push({
+            success: true,
+            linkId: storyLinkUpsertResult.shortcut_id,
+          })
+        }
+      }
+    }
+
+    if (results.some((result) => result.error)) {
+      throw results
     }
 
     // After successfully inserting an epic
@@ -169,7 +229,6 @@ Deno.serve(async (req) => {
               button: {
                 text: 'Estimate Now',
                 url: `${Deno.env.get('SITE_URL')}/estimation/${epicUpsertData[0].uuid}`,
-
                 style: 'primary',
               },
             }),
