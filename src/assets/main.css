@@ -12,3 +12,8 @@ h1 {
     margin-top: 0;
   }
 }
+
+ul {
+  list-style: circle;
+  padding-left: 2rem;
+}
