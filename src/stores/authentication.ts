@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useTeamsStore } from '@/stores/teams'
 import { useRolesStore } from '@/stores/roles'
 import { useSettingsStore } from '@/stores/settings'
 import { usePointScaleStore } from '@/stores/pointScales'
@@ -22,7 +21,6 @@ export const useAuthStore = defineStore('auth', () => {
   const loginError = ref<null | string>(null)
   const logoutError = ref<null | string>(null)
   const userStore = useUserStore()
-  const teamStore = useTeamsStore()
   const rolesStore = useRolesStore()
   const settingsStore = useSettingsStore()
   const pointScaleStore = usePointScaleStore()
@@ -54,8 +52,6 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         // Initialize App
         await userStore.getUser()
-        await userStore.getAllUsers()
-        await teamStore.getAllTeams()
         await settingsStore.getSettings()
         await pointScaleStore.listPointScales()
         await pointScaleStore.readPointScale()

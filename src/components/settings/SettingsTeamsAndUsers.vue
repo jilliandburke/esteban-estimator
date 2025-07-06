@@ -15,6 +15,9 @@ function closeUserCreateDialog() {
 function closeNewTeamDialog() {
   showNewTeamDialog.value = false
 }
+
+await userStore.getAllUsers()
+await teamsStore.getAllTeams()
 </script>
 
 <template>
