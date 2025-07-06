@@ -117,7 +117,7 @@ const submitLoginSettings = async ({ valid, values }) => {
     }
 
     if (userData) {
-      const result = await userStore.updateUserAuthData(userData)
+      const result = await userStore.updateUserAuth(userData)
 
       if (result && result !== null) {
         submittingLoginSettings.value = false

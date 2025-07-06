@@ -180,45 +180,29 @@ export const useUserStore = defineStore(
       }
     }
 
-    async function updateUserAuthData(userData: { email?: string; password?: string }) {
-      let updateData
+    async function updateUserAuth(userData: { email?: string; password?: string }) {
+      if (userData) {
+        let createError = null
 
-      if (userData.password) {
-        updateData = {
-          password: userData.password,
-        }
-      }
+        const { error } = await supabase.functions.invoke('update-user', {
+          body: { id: currentUser.value?.id, ...userData },
+        })
 
-      if (userData.email) {
-        updateData = {
-          ...updateData,
-          email: userData.email,
-        }
-      }
-
-      if (updateData) {
-        const { data: updatedAuthUser, error: updateAuthUserError } =
-          await supabase.auth.updateUser(updateData)
-
-        if (updateAuthUserError) {
-          return updateAuthUserError
-        }
-
-        if (updateData.email) {
-          const { error: updatedUserError } = await supabase
-            .from('profiles')
-            .update({
-              email: updateData.email,
-            })
-            .eq('id', updatedAuthUser.user.id)
-            .select()
-
-          if (updatedUserError) {
-            throw updatedUserError
+        if (error) {
+          if (error instanceof FunctionsHttpError) {
+            const errorMessage = await error.context.json()
+            createError = errorMessage.error
+          } else if (error instanceof FunctionsRelayError) {
+            createError = error.message
+          } else if (error instanceof FunctionsFetchError) {
+            createError = error.message
           }
 
-          await getUser()
+          return createError
         }
+
+        await getUser()
+        return createError
       }
     }
 
@@ -253,7 +237,7 @@ export const useUserStore = defineStore(
       createUser,
       getUsersWithRole,
       uploadAvatar,
-      updateUserAuthData,
+      updateUserAuth,
       isAdmin,
       avatarLink,
       getUserError,
