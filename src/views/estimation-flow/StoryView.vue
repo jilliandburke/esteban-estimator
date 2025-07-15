@@ -149,7 +149,18 @@ function goToPreviousStory() {
         <Panel v-if="story">
           <template #header>
             <div class="flex flex-col w-full">
-              <h4 class="font-bold text-xl mb-0">{{ story.title }}</h4>
+              <h4 class="font-bold text-xl mb-0">
+                {{ story.title }}
+                <Button
+                  as="a"
+                  variant="link"
+                  icon="pi pi-external-link"
+                  :href="story.link"
+                  target="_blank"
+                  rel="noopener"
+                  v-tooltip="{ value: 'View in Shortcut' }"
+                />
+              </h4>
               <Divider />
             </div>
           </template>

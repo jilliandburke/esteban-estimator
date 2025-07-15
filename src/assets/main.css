@@ -17,3 +17,15 @@ ul {
   list-style: circle;
   padding-left: 2rem;
 }
+
+ol {
+  list-style: decimal;
+  padding-left: 2rem;
+}
+
+code {
+  background-color: var(--p-primary-500);
+  color: var(--p-surface-900);
+  padding: 0.1rem;
+  border-radius: 0.25rem;
+}

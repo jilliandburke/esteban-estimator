@@ -18,6 +18,7 @@ const toast = useToast()
 const stories = ref<Story[]>([])
 const expandedRows = ref({})
 const loading = ref(estimation.value === undefined)
+const isSubmitting = ref(false)
 
 const estimationOptions = computed(() => {
   const pointList = ref(pointScaleStore.getPointScale?.scale?.split(', ').map(Number))
@@ -55,14 +56,17 @@ onMounted(async () => {
 })
 
 async function submitToShortcut() {
+  isSubmitting.value = true
   const result = await estimationStore.submitEstimationToShortcut(stories.value)
 
   if (result && result !== null) {
+    isSubmitting.value = false
     toast.add({ severity: 'danger', summary: 'Error', detail: `${result}`, life: 3000 })
     return
   }
 
   estimation.value = await estimationStore.getEstimation(route.params.id as string)
+  isSubmitting.value = false
   toast.add({
     severity: 'success',
     summary: 'Success',
@@ -97,10 +101,6 @@ async function onCellEditComplete(event: any) {
     life: 3000,
   })
 }
-
-// function calculatePercentage(estimations: number) {
-//   return Math.round((estimations / (team.value?.member_count || 0)) * 100)
-// }
 </script>
 
 <template>
@@ -156,7 +156,11 @@ async function onCellEditComplete(event: any) {
             <Column expander style="width: 3rem" />
             <Column field="shortcut_id" header="ID" class="min-w-30">
               <template #body="slotProps">
-                <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
+                <Tag
+                  :value="`sc-${slotProps.data.shortcut_id}`"
+                  severity="info"
+                  class="text-nowrap"
+                ></Tag>
               </template>
             </Column>
             <Column field="title" header="Title"></Column>
@@ -172,13 +176,6 @@ async function onCellEditComplete(event: any) {
                 </ScrollPanel>
               </template>
             </Column>
-            <!-- <Column field="state" header="Progress" style="width: 15%"> -->
-            <!--   <template #body="slotProps"> -->
-            <!--     <ProgressBar -->
-            <!--       :value="calculatePercentage(slotProps.data.estimations.length)" -->
-            <!--     ></ProgressBar> -->
-            <!--   </template> -->
-            <!-- </Column> -->
             <Column field="story_points" header="Story Points" style="width: 20%">
               <template #editor="{ data, field }">
                 <Select
@@ -242,7 +239,7 @@ async function onCellEditComplete(event: any) {
       <p class="text-sm text-surface-500 mr-4" v-if="estimation?.submitted_to_shortcut_at">
         Last submitted at {{ format(estimation.submitted_to_shortcut_at, 'h:m a, LLL d, yyyy') }}
       </p>
-      <Button label="Submit to Shortcut" :loading="loading" @click="submitToShortcut()" />
+      <Button label="Submit to Shortcut" :loading="isSubmitting" @click="submitToShortcut()" />
     </div>
   </div>
 </template>

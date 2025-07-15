@@ -35,7 +35,11 @@ function goToPreviousStory() {
           <DataTable :value="stories" size="large" tableStyle="min-width: 50rem">
             <Column header="ID" class="min-w-30">
               <template #body="slotProps">
-                <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
+                <Tag
+                  :value="`sc-${slotProps.data.shortcut_id}`"
+                  severity="info"
+                  class="text-nowrap"
+                ></Tag>
               </template>
             </Column>
             <Column field="title" header="Title">
