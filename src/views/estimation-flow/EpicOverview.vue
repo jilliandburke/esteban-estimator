@@ -120,7 +120,7 @@ function continueOrStartEstimation() {
                 <ScrollPanel style="width: 100%; height: 50px">
                   <p class="m-0 text-ellipsis h-[3.125rem]">
                     <vue-markdown
-                      :source="slotProps.data.description.slice(13)"
+                      :source="slotProps.data.description"
                       :options="{ breaks: true }"
                     />
                   </p>
