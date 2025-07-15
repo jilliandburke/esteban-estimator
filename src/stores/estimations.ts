@@ -14,6 +14,7 @@ export type Story = {
   shortcut_id: string
   story_points: number | null
   epic_id: string
+  link: string | null
   estimation?: {
     id: number
     uuid: string
