@@ -164,7 +164,7 @@ async function onCellEditComplete(event: any) {
               </template>
             </Column>
             <Column field="title" header="Title"></Column>
-            <Column field="description" header="Description" class="w-2/5">
+            <Column field="description" header="Description" class="w-2/5 max-w-md">
               <template #body="slotProps">
                 <ScrollPanel style="width: 100%; height: 50px">
                   <p class="m-0 text-ellipsis h-[3.125rem]">
