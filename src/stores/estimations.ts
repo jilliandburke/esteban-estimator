@@ -12,7 +12,7 @@ export type Story = {
   title: string | null
   description: string | null
   shortcut_id: string
-  story_points: number | null
+  story_points: number
   epic_id: string
   link: string | null
   estimation?: {
@@ -38,6 +38,7 @@ export type Story = {
   }[]
   blocked: boolean
   blocks: boolean
+  started: boolean
   story_links?: StoryLink[]
   created_at: string
   updated_at: string
@@ -149,8 +150,12 @@ export const useEstimationsStore = defineStore(
 
           estimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
 
-          //@ts-expect-error idk what this means dude
-          if (stories) estimation.stories = stories
+          if (stories) {
+            //@ts-expect-error idk what this means dude
+            const filteredStories = stories.filter((story: Story) => !story.started)
+
+            if (filteredStories) estimation.stories = filteredStories
+          }
         }
 
         mappedEstimations.map(
@@ -217,8 +222,12 @@ export const useEstimationsStore = defineStore(
 
         const stories = await getStories(epicData.uuid)
 
-        // @ts-expect-error idk what this means dude
-        if (stories) mappedEstimation.stories = stories
+        if (stories) {
+          //@ts-expect-error idk what this means dude
+          const filteredStories = stories.filter((story: Story) => !story.started)
+
+          if (filteredStories) mappedEstimation.stories = filteredStories
+        }
 
         if (mappedEstimation?.stories)
           mappedEstimation.storyCount = mappedEstimation?.stories.length
