@@ -86,7 +86,7 @@ export const useUserStore = defineStore(
 
           resetGetUserError()
           currentUser.value = profile
-          await estimationsStore.getEstimations()
+          await estimationsStore.getEpics()
         }
       }
     }

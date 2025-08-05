@@ -36,7 +36,7 @@ const estimationOptions = computed(() => {
 
 onMounted(async () => {
   if (route.params.id) {
-    estimation.value = await estimationStore.getEstimation(route.params.id as string)
+    estimation.value = await estimationStore.getEpic(route.params.id as string)
     const result = await teamsStore.getTeamByEpicId(route.params.id as string)
     team.value = result.data
 
@@ -65,7 +65,7 @@ async function submitToShortcut() {
     return
   }
 
-  estimation.value = await estimationStore.getEstimation(route.params.id as string)
+  estimation.value = await estimationStore.getEpic(route.params.id as string)
   isSubmitting.value = false
   toast.add({
     severity: 'success',
@@ -169,7 +169,7 @@ async function onCellEditComplete(event: any) {
                 <ScrollPanel style="width: 100%; height: 50px">
                   <p class="m-0 text-ellipsis h-[3.125rem]">
                     <vue-markdown
-                      :source="slotProps.data.description.slice(13)"
+                      :source="slotProps.data.description"
                       :options="{ breaks: true }"
                     />
                   </p>
