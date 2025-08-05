@@ -40,7 +40,7 @@ function continueOrStartEstimation() {
     }
   } else if (
     estimationStatus === EstimationStatus.IN_PROGRESS &&
-    !storiesWithoutEstimation?.length
+    storiesWithoutEstimation?.length === 0
   ) {
     // If all stories have estimations but they haven't all been submitted, navigate to the review view
     return {

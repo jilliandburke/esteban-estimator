@@ -86,7 +86,7 @@ function goToPreviousStory() {
       </div>
     </div>
     <div
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 z-50"
     >
       <div class="flex gap-4">
         <Button severity="secondary" @click="goToPreviousStory"> Back </Button>
