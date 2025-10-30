@@ -124,8 +124,9 @@ Deno.serve(async (req) => {
       throw new Error(`Database upsert error: ${epicUpsertError.message}`)
     }
 
+    // Filter archived and non-team stories
     const storiesFiltered = storiesData.filter((story) => {
-      return !story.archived && !story.completed_at
+      return !story.archived && story.group_id === settingsData.sc_team_id
     })
 
     // Store Stories in Supabase
@@ -134,9 +135,11 @@ Deno.serve(async (req) => {
       title: story.name,
       description: story.description,
       link: story.app_url,
+      story_points: story.estimate || 0,
       epic_id: epicUpsertData[0].uuid,
       blocked: story.blocked,
       blocker: story.blocker,
+      started: story.started,
     }))
 
     const { data: storiesUpsertResult, error: storiesUpsertError } = await supabaseClient

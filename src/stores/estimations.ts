@@ -5,6 +5,9 @@ import { useUserStore } from '@/stores/user'
 import { useTeamsStore } from '@/stores/teams'
 import { useRouter } from 'vue-router'
 import { FunctionsHttpError, FunctionsRelayError, FunctionsFetchError } from '@supabase/supabase-js'
+import { listEpics } from '@/services/epicService'
+import { listStories } from '@/services/storyService'
+import { useToast } from 'primevue/usetoast'
 
 export type Story = {
   id: number
@@ -12,8 +15,9 @@ export type Story = {
   title: string | null
   description: string | null
   shortcut_id: string
-  story_points: number | null
+  story_points: number
   epic_id: string
+  link: string | null
   estimation?: {
     id: number
     uuid: string
@@ -36,8 +40,9 @@ export type Story = {
     updated_at: string
   }[]
   blocked: boolean
-  blocks: boolean
+  blocker: boolean
   story_links?: StoryLink[]
+  storyLinks?: StoryLink[]
   created_at: string
   updated_at: string
 }
@@ -62,6 +67,7 @@ export type Epic = {
   shortcut_id: string | null
   link: string | null
   team_id: string | null
+  story_count: number | null
   completed_estimation_at: string | null
   created_at: string
   updated_at: string
@@ -79,7 +85,7 @@ export type Estimation = {
   userEstimationStatus?: EstimationStatus
   submitted_to_shortcut_at?: string | null
   stories?: Story[]
-  storyCount?: number
+  story_count?: number
   created_at: string
   updated_at: string
 }
@@ -98,16 +104,21 @@ export const useEstimationsStore = defineStore(
     const getEstimationsError = ref<string | null>(null)
     const router = useRouter()
     const userStore = useUserStore()
+    const toast = useToast()
 
     const remainingEstimations = computed(() => {
       return estimations.value.filter(
-        (item) => item.userEstimationStatus !== EstimationStatus.COMPLETE,
+        (item) =>
+          item.userEstimationStatus !== EstimationStatus.COMPLETE &&
+          !item.team_completed_estimation_at,
       )
     })
 
     const completedEstimations = computed(() => {
       return estimations.value.filter(
-        (item) => item.userEstimationStatus === EstimationStatus.COMPLETE,
+        (item) =>
+          item.userEstimationStatus === EstimationStatus.COMPLETE ||
+          item.team_completed_estimation_at,
       )
     })
 
@@ -115,165 +126,48 @@ export const useEstimationsStore = defineStore(
       return estimations.value
     })
 
-    async function getEstimations() {
-      let error
-      let mappedEstimations: Estimation[] = []
+    async function getEpics() {
       const user = userStore.currentUser
 
       if (!user) return
 
-      const teamIds = [...new Set(user.teams.map((team) => team.uuid))]
-
-      if (!teamIds) return
-
-      const { data: epicData, error: epicError } = await supabase
-        .from('epics')
-        .select()
-        .in('team_id', teamIds as string[])
-        .order('updated_at', { ascending: false })
-
-      if (epicError) error = epicError
-
-      if (epicData) {
-        mappedEstimations = epicData
-
-        for (const estimation of mappedEstimations) {
-          const stories = await getStories(estimation.uuid)
-
-          const completedEstimation = await hasUserCompletedEstimation(estimation.uuid)
-
-          estimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
-
-          //@ts-expect-error idk what this means dude
-          if (stories) estimation.stories = stories
-        }
-
-        mappedEstimations.map(
-          (estimation: Estimation) => (estimation.storyCount = estimation?.stories?.length),
-        )
-      }
+      const { data, error } = await listEpics(user)
 
       if (error) {
-        getEstimationsError.value = error.message
+        error.forEach((error: Error) => {
+          toast.add({ severity: 'danger', summary: 'Error', detail: error.message, life: 3000 })
+        })
         return
       }
 
-      estimations.value = mappedEstimations
+      estimations.value = data
     }
 
-    async function hasUserCompletedEstimation(epicId: string) {
-      if (!epicId) {
-        console.log('No Epic ID supplied')
+    async function getEpic(uuid: string) {
+      let mappedEpic: Estimation | undefined = undefined
+
+      const epic = estimations.value.find((item: Estimation) => item.uuid === uuid)
+
+      if (!epic) {
+        toast.add({ severity: 'danger', summary: 'Error', detail: 'Epic not found', life: 3000 })
         return
       }
 
-      const storyCount = await getStoryCount(epicId)
-      const user = userStore.currentUser
-      const { count, error } = await supabase
-        .from('estimations')
-        .select('*', { count: 'exact', head: true })
-        .eq('epic_id', epicId)
-        .eq('user_id', user?.id as string)
+      const { data, error } = await listStories(epic?.uuid)
 
       if (error) {
-        console.log('Error confirming user estimation count')
+        toast.add({ severity: 'danger', summary: 'Error', detail: error, life: 3000 })
         return
       }
 
-      if (count === 0) {
-        return EstimationStatus.NOT_STARTED
-      } else if (count !== storyCount) {
-        return EstimationStatus.IN_PROGRESS
-      } else {
-        return EstimationStatus.COMPLETE
-      }
-    }
+      if (data) {
+        mappedEpic = { ...epic }
 
-    async function getEstimation(uuid: string) {
-      let mappedEstimation: Estimation | undefined = undefined
-
-      const { data: epicData, error: epicError } = await supabase
-        .from('epics')
-        .select()
-        .eq('uuid', uuid)
-        .single()
-
-      if (epicError) {
-        getEstimationsError.value = epicError.message
-        return
+        mappedEpic.stories = data
+        stories.value = data
       }
 
-      if (epicData) {
-        mappedEstimation = epicData
-
-        const completedEstimation = await hasUserCompletedEstimation(epicData.uuid)
-
-        mappedEstimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
-
-        const stories = await getStories(epicData.uuid)
-
-        // @ts-expect-error idk what this means dude
-        if (stories) mappedEstimation.stories = stories
-
-        if (mappedEstimation?.stories)
-          mappedEstimation.storyCount = mappedEstimation?.stories.length
-      }
-
-      return mappedEstimation
-    }
-
-    async function getStories(epicId: string) {
-      const { data, error } = await supabase.from('stories').select().eq('epic_id', epicId)
-
-      if (error) {
-        return
-      }
-
-      const user = userStore.currentUser
-
-      if (!user) return { data: null, error: 'No user found' }
-
-      const mappedStories: Story[] = data
-
-      if (mappedStories) {
-        for (const story of mappedStories) {
-          const { data: estimationData } = await supabase
-            .from('estimations')
-            .select()
-            .eq('story_id', story.uuid)
-            .eq('user_id', user.id)
-            .maybeSingle()
-
-          // Get story links where this story is the subject
-          const { data: subjectLinks } = await supabase
-            .from('story_links')
-            .select()
-            .eq('subject_id', story.shortcut_id)
-            .eq('type', 'subject')
-
-          // Get story links where this story is the object
-          const { data: objectLinks } = await supabase
-            .from('story_links')
-            .select()
-            .eq('object_id', story.shortcut_id)
-            .eq('type', 'object')
-
-          if (estimationData) {
-            story.estimation = estimationData
-          }
-
-          if (subjectLinks) {
-            story.story_links = [...(story.story_links || []), ...subjectLinks]
-          }
-
-          if (objectLinks) {
-            story.story_links = [...(story.story_links || []), ...objectLinks]
-          }
-        }
-      }
-
-      stories.value = mappedStories
-      return mappedStories
+      return mappedEpic
     }
 
     async function getStoriesWithAllEstimations(epicId: string) {
@@ -287,6 +181,7 @@ export const useEstimationsStore = defineStore(
         return []
       }
 
+      // @ts-expect-error anotha one
       const mappedStories: Story[] = data
 
       if (mappedStories) {
@@ -298,22 +193,22 @@ export const useEstimationsStore = defineStore(
 
           if (data) {
             story.estimations = data
+            const estimations = story.estimations.filter(
+              (estimation) => estimation.estimation !== null,
+            )
+
+            const sum = estimations.reduce((prev, estimation) => {
+              return prev + estimation.estimation
+            }, 0)
+
+            const average = Math.round(sum / estimations.length)
+
+            story.story_points = average
           }
         }
       }
 
       return mappedStories
-    }
-
-    async function getStoryCount(epicId: string) {
-      const { count, error } = await supabase
-        .from('stories')
-        .select('*', { count: 'exact', head: true })
-        .eq('epic_id', epicId)
-
-      if (error) return
-
-      return count
     }
 
     async function submitStoryEstimation(storyId: string, epicId: string, estimation: number) {
@@ -348,6 +243,11 @@ export const useEstimationsStore = defineStore(
         .select()
         .maybeSingle()
 
+      if (error) {
+        console.log('Error updating estimation', error)
+        return { data: null, error: error }
+      }
+
       // Add estimation to story in stories array
       if (data) {
         stories.value.map((story) => {
@@ -357,7 +257,34 @@ export const useEstimationsStore = defineStore(
         })
       }
 
-      // TODO - If review isn't required run an edge function to update shortcut
+      // Get all estimations for this story and update the story points with the average
+      const { data: estimations, error: estimationsError } = await supabase
+        .from('estimations')
+        .select()
+        .eq('team_id', teamIdData?.team_id)
+        .eq('story_id', storyId)
+        .order('story_id')
+
+      if (estimationsError) {
+        console.log('Error getting estimations', error)
+        return { data: null, error: estimationsError }
+      }
+
+      const sum = estimations.reduce((prev, estimation) => {
+        return prev + estimation.estimation
+      }, 0)
+      const average = Math.round(sum / estimations.length)
+
+      const { error: storyUpdateError } = await supabase
+        .from('stories')
+        .update({ story_points: average })
+        .eq('uuid', storyId)
+        .select()
+
+      if (storyUpdateError) {
+        console.log('Error saving average', storyUpdateError)
+        return { data: null, error: storyUpdateError }
+      }
 
       return { data, error }
     }
@@ -370,56 +297,8 @@ export const useEstimationsStore = defineStore(
         // Just exit back to dash without calculating averages
         router.push({ path: '/' })
       } else {
-        // If we have all the estimations we expect, start getting the averages
-
-        // Collect team to get all estimations by team
-        const { data: team, error: teamError } = await useTeamsStore().getTeamByEpicId(epicId)
-
-        if (teamError) {
-          console.log('Error getting team', teamError)
-          return
-        }
-        if (!team) {
-          console.log('No team found')
-          return
-        }
-
-        // Get all estimations done by this team for this epic
-        const { data: estimations, error } = await supabase
-          .from('estimations')
-          .select()
-          .eq('epic_id', epicId)
-          .eq('team_id', team.uuid)
-          .order('story_id')
-
-        if (error) {
-          console.log('Error getting estimations', error)
-          return
-        }
-
-        // Get unique story IDs so we can iterate on the estimations by storyId to collect estimation
-        // averages
-        const uniqueStoryIds = [...new Set(estimations.map((item) => item.story_id))]
-
-        for (const storyId of uniqueStoryIds) {
-          const stories = estimations.filter((item) => item.story_id === storyId)
-          const sum = stories.reduce((prev, story) => {
-            return prev + story.estimation
-          }, 0)
-          const average = Math.round(sum / stories.length)
-
-          const { error: storyUpdateError } = await supabase
-            .from('stories')
-            .update({ story_points: average })
-            .eq('uuid', storyId)
-            .select()
-
-          if (storyUpdateError) {
-            console.log('Error saving average', storyUpdateError)
-            return
-          }
-        }
-
+        // If we have all the estimations we expect update the epic with the completion date &
+        // notify the admin(s) via Slack
         const { data: epicUpdateData, error: epicUpdateError } = await supabase
           .from('epics')
           .update({ team_completed_estimation_at: new Date().toISOString() })
@@ -532,22 +411,201 @@ export const useEstimationsStore = defineStore(
       }
     }
 
+    // async function hasUserCompletedEstimation(epicId: string) {
+    //   if (!epicId) {
+    //     console.log('No Epic ID supplied')
+    //     return
+    //   }
+    //
+    //   const storyCount = await getStoryCount(epicId)
+    //   const user = userStore.currentUser
+    //   const { count, error } = await supabase
+    //     .from('estimations')
+    //     .select('*', { count: 'exact', head: true })
+    //     .eq('epic_id', epicId)
+    //     .eq('user_id', user?.id as string)
+    //
+    //   if (error) {
+    //     console.log('Error confirming user estimation count')
+    //     return
+    //   }
+    //
+    //   if (count === 0) {
+    //     return EstimationStatus.NOT_STARTED
+    //   } else if (count !== storyCount) {
+    //     return EstimationStatus.IN_PROGRESS
+    //   } else {
+    //     return EstimationStatus.COMPLETE
+    //   }
+    // }
+
+    // async function getEstimations() {
+    //   let error
+    //   let mappedEstimations: Estimation[] = []
+    //   const user = userStore.currentUser
+    //
+    //   if (!user) return
+    //
+    //   const teamIds = [...new Set(user.teams.map((team) => team.uuid))]
+    //
+    //   if (!teamIds) return
+    //
+    //   const { data: epicData, error: epicError } = await supabase
+    //     .from('epics')
+    //     .select()
+    //     .in('team_id', teamIds as string[])
+    //     .order('updated_at', { ascending: false })
+    //
+    //   if (epicError) error = epicError
+    //
+    //   if (epicData) {
+    //     mappedEstimations = epicData
+    //
+    //     for (const estimation of mappedEstimations) {
+    //       const stories = await getStories(estimation.uuid)
+    //
+    //       const completedEstimation = await hasUserCompletedEstimation(estimation.uuid)
+    //
+    //       estimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
+    //
+    //       if (stories) {
+    //         //@ts-expect-error idk what this means dude
+    //         const filteredStories = stories.filter((story: Story) => !story.started)
+    //
+    //         if (filteredStories) estimation.stories = filteredStories
+    //       }
+    //     }
+    //
+    //     mappedEstimations.map(
+    //       (estimation: Estimation) => (estimation.storyCount = estimation?.stories?.length),
+    //     )
+    //   }
+    //
+    //   if (error) {
+    //     getEstimationsError.value = error.message
+    //     return
+    //   }
+    //
+    //   estimations.value = mappedEstimations
+    // }
+
+    async function getStoryCount(epicId: string) {
+      const { count, error } = await supabase
+        .from('stories')
+        .select('*', { count: 'exact', head: true })
+        .eq('epic_id', epicId)
+
+      if (error) return
+
+      return count
+    }
+
+    // async function getEstimation(uuid: string) {
+    //   let mappedEstimation: Estimation | undefined = undefined
+    //
+    //   const { data: epicData, error: epicError } = await supabase
+    //     .from('epics')
+    //     .select()
+    //     .eq('uuid', uuid)
+    //     .single()
+    //
+    //   if (epicError) {
+    //     getEstimationsError.value = epicError.message
+    //     return
+    //   }
+    //
+    //   if (epicData) {
+    //     mappedEstimation = epicData
+    //
+    //     const completedEstimation = await hasUserCompletedEstimation(epicData.uuid)
+    //
+    //     mappedEstimation.userEstimationStatus = completedEstimation ?? EstimationStatus.NOT_STARTED
+    //
+    //     const stories = await getStories(epicData.uuid)
+    //
+    //     if (stories) {
+    //       //@ts-expect-error idk what this means dude
+    //       const filteredStories = stories.filter((story: Story) => !story.started)
+    //
+    //       if (filteredStories) mappedEstimation.stories = filteredStories
+    //     }
+    //
+    //     if (mappedEstimation?.stories)
+    //       mappedEstimation.story_count = mappedEstimation?.stories.length
+    //   }
+    //
+    //   return mappedEstimation
+    // }
+
+    // async function getStories(epicId: string) {
+    //   const { data, error } = await supabase.from('stories').select().eq('epic_id', epicId)
+    //
+    //   if (error) {
+    //     return
+    //   }
+    //
+    //   const user = userStore.currentUser
+    //
+    //   if (!user) return { data: null, error: 'No user found' }
+    //
+    //   const mappedStories: Story[] = data
+    //
+    //   if (mappedStories) {
+    //     for (const story of mappedStories) {
+    //       const { data: estimationData } = await supabase
+    //         .from('estimations')
+    //         .select()
+    //         .eq('story_id', story.uuid)
+    //         .eq('user_id', user.id)
+    //         .maybeSingle()
+    //
+    //       // Get story links where this story is the subject
+    //       const { data: subjectLinks } = await supabase
+    //         .from('story_links')
+    //         .select()
+    //         .eq('subject_id', story.shortcut_id)
+    //         .eq('type', 'subject')
+    //
+    //       // Get story links where this story is the object
+    //       const { data: objectLinks } = await supabase
+    //         .from('story_links')
+    //         .select()
+    //         .eq('object_id', story.shortcut_id)
+    //         .eq('type', 'object')
+    //
+    //       if (estimationData) {
+    //         story.estimation = estimationData
+    //       }
+    //
+    //       if (subjectLinks) {
+    //         story.story_links = [...(story.story_links || []), ...subjectLinks]
+    //       }
+    //
+    //       if (objectLinks) {
+    //         story.story_links = [...(story.story_links || []), ...objectLinks]
+    //       }
+    //     }
+    //   }
+    //
+    //   stories.value = mappedStories
+    //   return mappedStories
+    // }
+
     return {
-      getEstimations,
+      getEpics,
       remainingEstimations,
       completedEstimations,
       allEstimations,
       estimations,
       stories,
       getEstimationsError,
-      getEstimation,
-      getStoryCount,
+      getEpic,
       getStoriesWithAllEstimations,
-      hasUserCompletedEstimation,
       submitStoryEstimation,
       finishEstimation,
       updateStoryPoints,
       submitEstimationToShortcut,
+      getStoryCount,
     }
   },
   { persist: true },

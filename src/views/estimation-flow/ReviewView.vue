@@ -35,7 +35,11 @@ function goToPreviousStory() {
           <DataTable :value="stories" size="large" tableStyle="min-width: 50rem">
             <Column header="ID" class="min-w-30">
               <template #body="slotProps">
-                <Tag :value="`sc-${slotProps.data.shortcut_id}`" severity="info"></Tag>
+                <Tag
+                  :value="`sc-${slotProps.data.shortcut_id}`"
+                  severity="info"
+                  class="text-nowrap"
+                ></Tag>
               </template>
             </Column>
             <Column field="title" header="Title">
@@ -60,12 +64,12 @@ function goToPreviousStory() {
                 </span>
               </template>
             </Column>
-            <Column field="description" header="Description" class="w-2/5">
+            <Column field="description" header="Description" class="w-2/5 max-w-md">
               <template #body="slotProps">
                 <ScrollPanel style="width: 100%; height: 50px">
                   <p class="m-0 text-ellipsis h-[3.125rem]">
                     <vue-markdown
-                      :source="slotProps.data.description.slice(13)"
+                      :source="slotProps.data.description"
                       :options="{ breaks: true }"
                     />
                   </p>
@@ -82,7 +86,7 @@ function goToPreviousStory() {
       </div>
     </div>
     <div
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 z-50"
     >
       <div class="flex gap-4">
         <Button severity="secondary" @click="goToPreviousStory"> Back </Button>

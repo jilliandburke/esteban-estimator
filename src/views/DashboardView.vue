@@ -23,7 +23,7 @@ userStore.getUser()
     <div class="flex flex-col gap-4">
       <h3 class="font-bold text-2xl">Estimations Remaining</h3>
 
-      <div class="flex gap-6" v-if="estimationsStore.remainingEstimations.length">
+      <div class="flex flex-wrap gap-6" v-if="estimationsStore.remainingEstimations.length">
         <Card
           class="w-96 overflow-hidden"
           :pt="{ body: { class: 'flex flex-col justify-between h-full' } }"
@@ -31,7 +31,7 @@ userStore.getUser()
           :key="estimation.uuid"
         >
           <template #title>{{ estimation.title }}</template>
-          <template #subtitle> {{ estimation.storyCount }} stories </template>
+          <template #subtitle> {{ estimation.story_count }} stories </template>
           <template #content>
             <ScrollPanel style="width: 100%; height: 150px">
               <p class="m-0 text-ellipsis">
@@ -80,7 +80,7 @@ userStore.getUser()
           :key="estimation.uuid"
         >
           <template #title>{{ estimation.title }}</template>
-          <template #subtitle> {{ estimation.storyCount }} stories </template>
+          <template #subtitle> {{ estimation.story_count }} stories </template>
           <template #content>
             <ScrollPanel style="width: 100%; height: 150px">
               <p class="m-0 text-ellipsis">

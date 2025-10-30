@@ -5,6 +5,7 @@ import { usePointScaleStore } from '@/stores/pointScales'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
+import { readStory } from '@/services/storyService'
 
 export type StoriesToEstimate = {
   order: number
@@ -66,7 +67,7 @@ function isBlocked(item: StoryLink, storyId: string) {
   return item.object_id === storyId && item.type === 'object'
 }
 
-function initializePage() {
+async function initializePage() {
   if (route.params.storyId) {
     const currentStoryForEstimation = stories.value.find((item) => item.current)
 
@@ -149,7 +150,18 @@ function goToPreviousStory() {
         <Panel v-if="story">
           <template #header>
             <div class="flex flex-col w-full">
-              <h4 class="font-bold text-xl mb-0">{{ story.title }}</h4>
+              <h4 class="font-bold text-xl mb-0">
+                {{ story.title }}
+                <Button
+                  as="a"
+                  variant="link"
+                  icon="pi pi-external-link"
+                  :href="story.link"
+                  target="_blank"
+                  rel="noopener"
+                  v-tooltip="{ value: 'View in Shortcut' }"
+                />
+              </h4>
               <Divider />
             </div>
           </template>
@@ -161,7 +173,7 @@ function goToPreviousStory() {
             <Divider />
 
             <!-- This code is horrendous I'm so sorry to whoever finds themselves here -->
-            <DataView :value="story.story_links" v-if="story.story_links?.length !== 0">
+            <DataView :value="story.storyLinks" v-if="story.storyLinks?.length !== 0">
               <template #list="slotProps">
                 <div class="flex flex-col gap-2 px-3">
                   <div v-for="(item, index) in slotProps.items" :key="index">
