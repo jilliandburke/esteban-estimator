@@ -43,7 +43,7 @@ const toggle = (event: unknown) => {
     <template #item="{ item, props }">
       <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
         <a v-ripple :href="href" v-bind="props.action" @click="navigate">
-          <span :class="item.icon" />
+          <span v-if="item.icon" :class="item.icon" />
           <span class="font-bold">{{ item.label }}</span>
         </a>
       </router-link>

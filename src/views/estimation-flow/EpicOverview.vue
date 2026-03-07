@@ -61,7 +61,7 @@ function continueOrStartEstimation() {
   <div v-if="loading" class="flex justify-center mt-64">
     <ProgressSpinner />
   </div>
-  <div v-else class="flex h-full p-10 mx-6 justify-center mb-30">
+  <div v-else class="flex h-full p-10 pb-12 mx-6 justify-center mb-30">
     <div class="flex flex-col gap-10 w-full max-w-7xl">
       <div class="flex flex-col gap-4">
         <h3 class="font-bold text-2xl pl-4">Epic Overview</h3>
