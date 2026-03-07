@@ -15,19 +15,19 @@ export type PointScale = {
 export const usePointScaleStore = defineStore(
   'pointScale',
   () => {
-    const settingsStore = useSettingsStore()
     const pointScale = ref<PointScale | null>(null)
     const pointScales = ref<PointScale[] | null>(null)
 
-    const getPointScale = computed(() => {
-      return pointScale.value
-    })
+    const getPointScale = computed(() => pointScale.value)
 
     async function readPointScale() {
+      // Get settings store inside function to avoid circular dependency
+      const settingsStore = useSettingsStore()
       const pointScaleId = settingsStore.settings?.pointScale.uuid
 
       if (!pointScaleId) {
-        return 'No point scale set'
+        console.error('No point scale ID found in settings')
+        return
       }
 
       const { data, error } = await supabase
@@ -37,21 +37,22 @@ export const usePointScaleStore = defineStore(
         .maybeSingle()
 
       if (error) {
-        return error
-      } else {
-        pointScale.value = data
+        console.error('Error reading point scale:', error)
+        return
       }
+
+      pointScale.value = data
     }
 
     async function listPointScales() {
       const { data, error } = await supabase.from('point_scales').select()
 
       if (error) {
-        console.log('Error collecting point scales', error)
+        console.error('Error listing point scales:', error)
         return
-      } else {
-        pointScales.value = data
       }
+
+      pointScales.value = data
     }
 
     return { pointScale, getPointScale, pointScales, readPointScale, listPointScales }

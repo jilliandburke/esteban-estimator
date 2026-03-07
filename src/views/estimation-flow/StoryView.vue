@@ -5,7 +5,6 @@ import { usePointScaleStore } from '@/stores/pointScales'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
-import { readStory } from '@/services/storyService'
 
 export type StoriesToEstimate = {
   order: number
@@ -22,9 +21,33 @@ const story = ref<Story | undefined>(undefined)
 const nextStory = ref<Story | undefined>(undefined)
 const selectedEstimation = ref<number | undefined>(undefined)
 const toast = useToast()
-const estimationOptions = ref(pointScaleStore.getPointScale?.scale?.split(', ').map(Number))
+
+const estimationOptions = computed(() => {
+  const scale = pointScaleStore.getPointScale?.scale
+  if (!scale) return []
+
+  try {
+    // Parse the JSON array string
+    const parsed = JSON.parse(scale)
+    // Convert to numbers, filtering out any non-numeric values
+    return parsed.map(Number).filter((n: number) => !isNaN(n))
+  } catch (e) {
+    console.error('Failed to parse point scale:', e)
+    return []
+  }
+})
 
 onMounted(() => {
+  if (estimationStore.stories.length === 0) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No stories loaded. Please navigate from the epic overview page.',
+      life: 5000,
+    })
+    return
+  }
+
   let count = 1
   for (const story of estimationStore.stories) {
     stories.value.push({
@@ -247,7 +270,11 @@ function goToPreviousStory() {
           v-for="estimation in estimationOptions"
           :key="estimation"
           :for="`${estimation}`"
-          class="flex rounded-lg border border-surface-200 dark:border-surface-700 p-2 gap-3 cursor-pointer items-center hover:bg-surface-100 hover:dark:bg-surface-900 focus:border-blue-800 has-checked:border-primary-400 lg:max-w-1/2"
+          class="estimation-option flex rounded-lg border-2 p-3 gap-3 cursor-pointer items-center transition-all duration-200 ease-in-out"
+          :class="{
+            'estimation-option--selected': selectedEstimation === estimation,
+            'estimation-option--unselected': selectedEstimation !== estimation,
+          }"
         >
           <RadioButton
             v-model="selectedEstimation"
@@ -255,7 +282,7 @@ function goToPreviousStory() {
             name="dynamic"
             :value="estimation"
           />
-          <p>{{ estimation }}</p>
+          <p class="text-lg font-medium">{{ estimation }}</p>
         </label>
       </div>
     </div>
@@ -287,3 +314,66 @@ function goToPreviousStory() {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Estimation option base styles - Default light theme */
+.estimation-option {
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.estimation-option--unselected {
+  border-color: var(--color-border);
+}
+
+.estimation-option--unselected:hover {
+  background-color: var(--color-surface-variant);
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.estimation-option--selected {
+  background-color: var(--color-surface-variant);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.estimation-option--selected:hover {
+  background-color: var(--color-surface-variant);
+  border-color: var(--color-accent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+/* Dark mode uses the same custom properties which are redefined for dark themes */
+:global(.dark) .estimation-option,
+:global(.p-dark) .estimation-option {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+:global(.dark) .estimation-option--unselected,
+:global(.p-dark) .estimation-option--unselected {
+  border-color: var(--color-border);
+}
+
+:global(.dark) .estimation-option--unselected:hover,
+:global(.p-dark) .estimation-option--unselected:hover {
+  background-color: var(--color-surface-variant);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+:global(.dark) .estimation-option--selected,
+:global(.p-dark) .estimation-option--selected {
+  background-color: var(--color-surface-variant);
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+:global(.dark) .estimation-option--selected:hover,
+:global(.p-dark) .estimation-option--selected:hover {
+  background-color: var(--color-surface-variant);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+</style>

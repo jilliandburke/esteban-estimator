@@ -21,15 +21,21 @@ const loading = ref(estimation.value === undefined)
 const isSubmitting = ref(false)
 
 const estimationOptions = computed(() => {
-  const pointList = ref(pointScaleStore.getPointScale?.scale?.split(', ').map(Number))
+  const scale = pointScaleStore.getPointScale?.scale
 
-  if (pointList.value) {
-    const mappedTeams = pointList.value.map((point) => {
+  if (!scale) return []
+
+  try {
+    // Parse the JSON array string
+    const parsed = JSON.parse(scale)
+    // Convert to numbers and map to the format needed
+    const pointList = parsed.map(Number).filter((n: number) => !isNaN(n))
+
+    return pointList.map((point) => {
       return { name: point, code: point }
     })
-
-    return mappedTeams
-  } else {
+  } catch (e) {
+    console.error('Failed to parse point scale:', e)
     return []
   }
 })

@@ -5,6 +5,7 @@ import { useUserStore } from '@/stores/user'
 import { useRolesStore } from '@/stores/roles'
 import { useSettingsStore } from '@/stores/settings'
 import { usePointScaleStore } from '@/stores/pointScales'
+import { useThemeStore } from '@/stores/theme'
 import { supabase } from '@/lib/supabaseClient'
 
 export type User = {
@@ -24,6 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
   const rolesStore = useRolesStore()
   const settingsStore = useSettingsStore()
   const pointScaleStore = usePointScaleStore()
+  const themeStore = useThemeStore()
   const loginLoading = ref(false)
 
   function resetLoginError() {
@@ -56,6 +58,9 @@ export const useAuthStore = defineStore('auth', () => {
         await pointScaleStore.listPointScales()
         await pointScaleStore.readPointScale()
         await rolesStore.getAllRoles()
+
+        // Apply user's theme preferences
+        await themeStore.setAppTheme()
 
         // Reset errors and push to the Dashboard
         resetLoginError()

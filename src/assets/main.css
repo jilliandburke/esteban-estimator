@@ -3,6 +3,142 @@
 @import 'primeicons/primeicons.css';
 @custom-variant dark (&:where(.p-dark, .p-dark *));
 
+@theme {
+  /* Brand colors */
+  --color-forest-green: #264a32;
+  --color-electric-green: #96f247;
+  --color-key-lime: #d8ffb5;
+  --color-highlight: #f0ffe3;
+  --color-charcoal: #2a2a2a;
+
+  /* Theme-specific colors (can be overridden) */
+  --color-background: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-surface-variant: #e0e0e0;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-accent: var(--color-electric-green);
+  --color-accent-secondary: var(--color-key-lime);
+  --color-border: #d0d0d0;
+}
+
+/* Apply theme colors to html and body */
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Dark theme base (default dark) */
+:where(.p-dark, .p-dark *) {
+  --color-background: #1a1a1a;
+  --color-surface: #2a2a2a;
+  --color-surface-variant: #3a3a3a;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b8b8b8;
+  --color-accent: var(--color-electric-green);
+  --color-border: #4a4a4a;
+}
+
+/* Deep Forest theme */
+html.dark-theme-deep-forest {
+  --color-background: #1a1f1c;
+  --color-surface: #232b26;
+  --color-surface-variant: #2d362f;
+  --color-text-primary: #e8f5eb;
+  --color-text-secondary: #b8d4be;
+  --color-accent: #96f247;
+  --color-border: #3a4a3d;
+}
+
+/* Midnight Sage theme */
+html.dark-theme-midnight-sage {
+  --color-background: #0f1410;
+  --color-surface: #1c221d;
+  --color-surface-variant: #283029;
+  --color-text-primary: #f0f7f1;
+  --color-text-secondary: #c2d8c7;
+  --color-accent: #e3ffca;
+  --color-border: #3d4a40;
+}
+
+/* Slate & Lime theme */
+html.dark-theme-slate-lime {
+  --color-background: #2a2a2a;
+  --color-surface: #333333;
+  --color-surface-variant: #3d3d3d;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b8b8b8;
+  --color-accent: #96f247;
+  --color-accent-secondary: #d8ffb5;
+  --color-border: #4a4a4a;
+}
+
+/* Neon Noir theme */
+html.dark-theme-neon-noir {
+  --color-background: #0d0d0d;
+  --color-surface: #1a1a1a;
+  --color-surface-variant: #242424;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a0a0a0;
+  --color-accent: #96f247;
+  --color-border: #96f24733;
+}
+
+/* === Light Theme Variants === */
+
+/* Spring Meadow theme */
+html.light-theme-spring-meadow {
+  --color-background: #f0ffe3;
+  --color-surface: #ffffff;
+  --color-surface-variant: #f5f5f5;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #264a32;
+  --color-accent: #264a32;
+  --color-accent-secondary: #96f247;
+  --color-border: #d8ffb5;
+}
+
+/* Mint Fresh theme */
+html.light-theme-mint-fresh {
+  --color-background: #ffffff;
+  --color-surface: #f9fdf9;
+  --color-surface-variant: #f0ffe3;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #264a32;
+  --color-accent: #52a01e;
+  --color-accent-secondary: #264a32;
+  --color-border: #e0e8e0;
+}
+
+/* Limelight theme */
+html.light-theme-limelight {
+  --color-background: #ffffff;
+  --color-surface: #f5fef0;
+  --color-surface-variant: #e8f7dd;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #264a32;
+  --color-accent: #52a01e;
+  --color-accent-secondary: #264a32;
+  --color-border: #b8e086;
+}
+
+/* Forest Light theme */
+html.light-theme-forest-light {
+  --color-background: #f8faf9;
+  --color-surface: #ffffff;
+  --color-surface-variant: #edf5f0;
+  --color-text-primary: #1a2a1f;
+  --color-text-secondary: #264a32;
+  --color-accent: #264a32;
+  --color-accent-secondary: #96f247;
+  --color-border: #c8dcd0;
+}
+
 h1 {
   font-weight: bold;
   line-height: 1.8rem;

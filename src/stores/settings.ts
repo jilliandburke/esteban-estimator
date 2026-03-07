@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabaseClient'
+import { useUserStore } from '@/stores/user'
 
 export type Settings = {
   id: number
@@ -40,33 +41,41 @@ export const useSettingsStore = defineStore(
     const settings = ref<MappedSettings | null>(null)
 
     async function getSettings() {
+      // Get the user store inside the function to avoid circular dependency
+      const userStore = useUserStore()
+      const userTeam = userStore.currentUser?.teams?.[0]?.uuid
+
+      if (!userTeam) {
+        console.error('No user team found, cannot get settings')
+        return
+      }
+
       const { data, error } = await supabase
         .from('settings')
-        .select(`*, teams (uuid, name), point_scales (uuid, name, scale)`)
-        .maybeSingle()
+        .select(`*, teams!inner (uuid, name), point_scales (uuid, name, scale)`)
+        .eq('team_id', userTeam)
+        .single()
 
       if (error) {
-        console.log('Error getting settings', error)
+        console.error('Error getting settings:', error)
         return
       }
 
       if (data) {
-        const mappedSettings = {
+        settings.value = {
           id: data.uuid,
           team: {
-            uuid: data?.teams?.uuid ?? null,
-            name: data?.teams?.name ?? null,
+            uuid: data.teams?.uuid ?? null,
+            name: data.teams?.name ?? null,
           },
           pointScale: {
-            uuid: data?.point_scales?.uuid ?? null,
-            name: data?.point_scales?.name ?? null,
+            uuid: data.point_scales?.uuid ?? null,
+            name: data.point_scales?.name ?? null,
           },
           requireReview: data.require_review,
           scApiKey: data.sc_api_key,
           scLabelId: data.sc_label_id,
         }
-
-        settings.value = mappedSettings
       }
     }
 
@@ -77,31 +86,25 @@ export const useSettingsStore = defineStore(
       labelId?: number
       apiKey?: string
     }) {
-      if (updateData && settings.value) {
-        const settingsId = settings.value.id
-        let updateError = null
+      if (!updateData || !settings.value) return
 
-        // This could use a refactor so if the item in question isn't passed in then it isn't
-        // updated
-        const { error } = await supabase
-          .from('settings')
-          .update({
-            point_scale_id: updateData.pointScale || settings.value.pointScale.uuid,
-            team_id: updateData.team || settings.value.team.uuid,
-            require_review: updateData.requireReview || settings.value.requireReview,
-            sc_label_id: updateData.labelId || settings.value.scLabelId,
-            sc_api_key: updateData.apiKey ?? settings.value.scApiKey,
-          })
-          .eq('uuid', settingsId)
+      const { error } = await supabase
+        .from('settings')
+        .update({
+          point_scale_id: updateData.pointScale ?? settings.value.pointScale.uuid,
+          team_id: updateData.team ?? settings.value.team.uuid,
+          require_review: updateData.requireReview ?? settings.value.requireReview,
+          sc_label_id: updateData.labelId ?? settings.value.scLabelId,
+          sc_api_key: updateData.apiKey ?? settings.value.scApiKey,
+        })
+        .eq('uuid', settings.value.id)
 
-        if (error) {
-          updateError = `Failed to update settings: ${error}`
-          return updateError
-        }
-
-        await getSettings()
-        return updateError
+      if (error) {
+        console.error('Failed to update settings:', error)
+        return error.message
       }
+
+      await getSettings()
     }
 
     return { getSettings, settings, updateSettings }
