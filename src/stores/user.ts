@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast'
 import { useEstimationsStore } from '@/stores/estimations'
 import { useThemeStore } from '@/stores/theme'
 import { FunctionsHttpError, FunctionsRelayError, FunctionsFetchError } from '@supabase/supabase-js'
+import type { DarkThemeKey, LightThemeKey } from '@/config/themes'
 
 export type Team = {
   uuid: string | null
@@ -22,6 +23,8 @@ export type User = {
   full_name: string | null
   avatar_url: string | null
   theme: 'system' | 'light' | 'dark'
+  dark_theme: DarkThemeKey | null
+  light_theme: LightThemeKey | null
   teams: Team[]
   roles: Role[]
 }
@@ -85,6 +88,7 @@ export const useUserStore = defineStore(
           const profile = data[0]
 
           resetGetUserError()
+          // @ts-ignore - Supabase returns the correct type, TypeScript just doesn't know about dark_theme yet
           currentUser.value = profile
           await estimationsStore.getEpics()
         }
@@ -96,6 +100,8 @@ export const useUserStore = defineStore(
       name?: string
       avatar_url?: string
       theme?: 'system' | 'light' | 'dark'
+      dark_theme?: DarkThemeKey | null
+      light_theme?: LightThemeKey | null
     }) {
       if (userData && currentUser.value) {
         const userId = currentUser.value.id
@@ -109,6 +115,14 @@ export const useUserStore = defineStore(
             full_name: userData.name || currentUser.value.full_name,
             avatar_url: userData.avatar_url || currentUser.value.avatar_url,
             theme: userData.theme || currentUser.value.theme,
+            dark_theme:
+              userData.dark_theme !== undefined
+                ? userData.dark_theme
+                : currentUser.value.dark_theme,
+            light_theme:
+              userData.light_theme !== undefined
+                ? userData.light_theme
+                : currentUser.value.light_theme,
           })
           .eq('id', userId)
 
@@ -145,6 +159,7 @@ export const useUserStore = defineStore(
         return
       }
 
+      // @ts-ignore - Supabase returns the correct type, TypeScript just doesn't know about dark_theme yet
       allUsers.value = data
     }
 

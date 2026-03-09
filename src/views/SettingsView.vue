@@ -2,7 +2,7 @@
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
-const isAdmin = userStore?.currentUser?.roles[0]?.name === 'admin'
+const isAdmin = userStore.isAdmin
 </script>
 
 <template>

@@ -5,7 +5,7 @@ import { usePointScaleStore } from '@/stores/pointScales'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
-import { readStory } from '@/services/storyService'
+import RadioCard from '@/components/RadioCard.vue'
 
 export type StoriesToEstimate = {
   order: number
@@ -22,9 +22,33 @@ const story = ref<Story | undefined>(undefined)
 const nextStory = ref<Story | undefined>(undefined)
 const selectedEstimation = ref<number | undefined>(undefined)
 const toast = useToast()
-const estimationOptions = ref(pointScaleStore.getPointScale?.scale?.split(', ').map(Number))
+
+const estimationOptions = computed(() => {
+  const scale = pointScaleStore.getPointScale?.scale
+  if (!scale) return []
+
+  try {
+    // Parse the JSON array string
+    const parsed = JSON.parse(scale)
+    // Convert to numbers, filtering out any non-numeric values
+    return parsed.map(Number).filter((n: number) => !isNaN(n))
+  } catch (e) {
+    console.error('Failed to parse point scale:', e)
+    return []
+  }
+})
 
 onMounted(() => {
+  if (estimationStore.stories.length === 0) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No stories loaded. Please navigate from the epic overview page.',
+      life: 5000,
+    })
+    return
+  }
+
   let count = 1
   for (const story of estimationStore.stories) {
     stories.value.push({
@@ -243,25 +267,21 @@ function goToPreviousStory() {
           the left. When you're done, click next to record the submission.
         </p>
 
-        <label
+        <RadioCard
           v-for="estimation in estimationOptions"
           :key="estimation"
-          :for="`${estimation}`"
-          class="flex rounded-lg border border-surface-200 dark:border-surface-700 p-2 gap-3 cursor-pointer items-center hover:bg-surface-100 hover:dark:bg-surface-900 focus:border-blue-800 has-checked:border-primary-400 lg:max-w-1/2"
+          v-model="selectedEstimation"
+          :input-id="`${estimation}`"
+          name="estimation"
+          :value="estimation"
         >
-          <RadioButton
-            v-model="selectedEstimation"
-            :inputId="`${estimation}`"
-            name="dynamic"
-            :value="estimation"
-          />
-          <p>{{ estimation }}</p>
-        </label>
+          <p class="text-lg font-medium">{{ estimation }}</p>
+        </RadioCard>
       </div>
     </div>
     <div
       v-if="story"
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-[var(--color-surface)] border-t-2 border-(--color-border)"
     >
       <div class="flex justify-between w-full">
         <div>

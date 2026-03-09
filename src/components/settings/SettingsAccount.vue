@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
+import { darkThemes, lightThemes, type DarkThemeKey, type LightThemeKey } from '@/config/themes'
 
 const userStore = useUserStore()
 const toast = useToast()
@@ -18,6 +19,20 @@ const displaySettingsResolver = zodResolver(
       name: z.string(),
       code: z.string(),
     }),
+    darkTheme: z
+      .object({
+        name: z.string(),
+        code: z.string(),
+      })
+      .optional()
+      .nullable(),
+    lightTheme: z
+      .object({
+        name: z.string(),
+        code: z.string(),
+      })
+      .optional()
+      .nullable(),
   }),
 )
 
@@ -56,17 +71,62 @@ const themeOptions = ref<{ name: string; code: string }[]>([
   { name: 'Dark', code: 'dark' },
 ])
 
-const defaultTheme = computed(() => {
+const darkThemeOptions = ref<{ name: string; code: DarkThemeKey }[]>([
+  { name: darkThemes.midnightSage.name, code: 'midnightSage' },
+  { name: darkThemes.deepForest.name, code: 'deepForest' },
+  { name: darkThemes.slateLime.name, code: 'slateLime' },
+  { name: darkThemes.neonNoir.name, code: 'neonNoir' },
+])
+
+const lightThemeOptions = ref<{ name: string; code: LightThemeKey }[]>([
+  { name: lightThemes.mintFresh.name, code: 'mintFresh' },
+  { name: lightThemes.springMeadow.name, code: 'springMeadow' },
+  { name: lightThemes.limelight.name, code: 'limelight' },
+  { name: lightThemes.forestLight.name, code: 'forestLight' },
+])
+
+const defaultTheme = computed((): { name: string; code: string } | undefined => {
   if (userStore.currentUser) {
     return themeOptions.value.find((theme) => theme.code === userStore?.currentUser?.theme)
   } else {
-    return themeOptions.value[0].code
+    return themeOptions.value[0]
   }
+})
+
+const defaultDarkTheme = computed(() => {
+  if (userStore.currentUser && userStore.currentUser.dark_theme) {
+    return darkThemeOptions.value.find((theme) => theme.code === userStore.currentUser?.dark_theme)
+  } else {
+    // Default to Midnight Sage if no theme is set
+    return darkThemeOptions.value[0] // This is Midnight Sage
+  }
+})
+
+const defaultLightTheme = computed(() => {
+  if (userStore.currentUser && userStore.currentUser.light_theme) {
+    return lightThemeOptions.value.find(
+      (theme) => theme.code === userStore.currentUser?.light_theme,
+    )
+  } else {
+    // Default to Mint Fresh if no theme is set
+    return lightThemeOptions.value[0] // This is Mint Fresh
+  }
+})
+
+const selectedTheme = ref<{ name: string; code: string } | undefined>(defaultTheme.value)
+const showDarkThemeSelector = computed(() => {
+  return selectedTheme.value?.code === 'dark' || selectedTheme.value?.code === 'system'
+})
+
+const showLightThemeSelector = computed(() => {
+  return selectedTheme.value?.code === 'light' || selectedTheme.value?.code === 'system'
 })
 
 const displayInitialValues = ref({
   name: userStore?.currentUser?.full_name,
   theme: defaultTheme.value,
+  darkTheme: defaultDarkTheme.value,
+  lightTheme: defaultLightTheme.value,
 })
 
 const loginInitialValues = ref({
@@ -78,10 +138,16 @@ const submitDisplaySettings = async ({ valid, values }) => {
   if (valid) {
     submittingDisplaySettings.value = true
 
-    const userData = {
+    const userData: any = {
       name: values.name,
       theme: values.theme.code,
     }
+
+    // Always set dark_theme (default to midnightSage if none selected)
+    userData.dark_theme = values.darkTheme?.code || 'midnightSage'
+
+    // Always set light_theme (default to mintFresh if none selected)
+    userData.light_theme = values.lightTheme?.code || 'mintFresh'
 
     const result = await userStore.updateUser(userData)
 
@@ -207,12 +273,46 @@ const uploadAvatar = async (event: { files: any[] }) => {
               optionLabel="name"
               placeholder="Select a theme"
               :disabled="submittingDisplaySettings"
+              v-model="selectedTheme"
               fluid
             />
             <Message v-if="$form.theme?.invalid" severity="error" size="small" variant="simple">{{
               $form.theme?.error?.message
             }}</Message>
           </div>
+
+          <!-- Dark Theme Variant (only shown when dark or system theme is selected) -->
+          <div v-if="showDarkThemeSelector" class="flex flex-col gap-1">
+            <label for="darkTheme">Dark Theme Style</label>
+            <Select
+              name="darkTheme"
+              :options="darkThemeOptions"
+              optionLabel="name"
+              placeholder="Select a dark theme variant"
+              :disabled="submittingDisplaySettings"
+              fluid
+            />
+            <small class="text-[var(--p-text-muted-color)]">
+              Choose your preferred dark theme appearance. Midnight Sage is the default.
+            </small>
+          </div>
+
+          <!-- Light Theme Variant (only shown when light or system theme is selected) -->
+          <div v-if="showLightThemeSelector" class="flex flex-col gap-1">
+            <label for="lightTheme">Light Theme Style</label>
+            <Select
+              name="lightTheme"
+              :options="lightThemeOptions"
+              optionLabel="name"
+              placeholder="Select a light theme variant"
+              :disabled="submittingDisplaySettings"
+              fluid
+            />
+            <small class="text-[var(--p-text-muted-color)]">
+              Choose your preferred light theme appearance. Mint Fresh is the default.
+            </small>
+          </div>
+
           <Button
             type="submit"
             label="Save Changes"
