@@ -167,7 +167,7 @@ function continueOrStartEstimation() {
     </div>
     <div
       v-if="epic && epic.stories && !isReview"
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700 z-50"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-[var(--color-surface)] border-t-2 border-(--color-border) z-50"
     >
       <Button asChild v-slot="slotProps">
         <RouterLink :to="continueOrStartEstimation()" :class="slotProps.class">{{

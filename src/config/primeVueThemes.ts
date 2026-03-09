@@ -136,7 +136,6 @@ export function createDarkThemePreset(themeKey: DarkThemeKey) {
             floatLabelFocusColor: colors.accent,
             floatLabelInvalidColor: '#f87171',
             iconColor: colors.textSecondary,
-            shadow: `0 0 0 0.2rem rgba(${accentRgbStr}, 0.2)`,
           },
 
           // Mask (for overlays, modals)
@@ -175,6 +174,17 @@ export function createDarkThemePreset(themeKey: DarkThemeKey) {
                 color: colors.textPrimary,
                 hoverColor: colors.textPrimary,
                 activeColor: colors.textPrimary,
+              },
+              success: {
+                background: colors.accent,
+                hoverBackground: colors.accent,
+                activeBackground: colors.accent,
+                borderColor: colors.accent,
+                hoverBorderColor: colors.accent,
+                activeBorderColor: colors.accent,
+                color: colors.background,
+                hoverColor: colors.background,
+                activeColor: colors.background,
               },
             },
           },
@@ -326,8 +336,8 @@ export function createLightThemePreset(themeKey: LightThemeKey) {
             500: colors.surface,
             600: colors.background,
             700: colors.background,
-            800: colors.background,
-            900: colors.background,
+            800: colors.textSecondary,
+            900: colors.textPrimary,
             950: colors.textPrimary,
           },
 
@@ -416,7 +426,6 @@ export function createLightThemePreset(themeKey: LightThemeKey) {
             floatLabelFocusColor: colors.accent,
             floatLabelInvalidColor: '#dc2626',
             iconColor: colors.textSecondary,
-            shadow: `0 0 0 0.2rem rgba(${accentRgbStr}, 0.2)`,
           },
 
           // Mask (for overlays, modals)
@@ -455,6 +464,17 @@ export function createLightThemePreset(themeKey: LightThemeKey) {
                 color: colors.textPrimary,
                 hoverColor: colors.textPrimary,
                 activeColor: colors.textPrimary,
+              },
+              success: {
+                background: colors.accent,
+                hoverBackground: colors.accent,
+                activeBackground: colors.accent,
+                borderColor: colors.accent,
+                hoverBorderColor: colors.accent,
+                activeBorderColor: colors.accent,
+                color: '#ffffff',
+                hoverColor: '#ffffff',
+                activeColor: '#ffffff',
               },
             },
           },

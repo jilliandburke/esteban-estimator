@@ -5,6 +5,7 @@ import { usePointScaleStore } from '@/stores/pointScales'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import VueMarkdown from 'vue-markdown-render'
+import RadioCard from '@/components/RadioCard.vue'
 
 export type StoriesToEstimate = {
   order: number
@@ -266,29 +267,21 @@ function goToPreviousStory() {
           the left. When you're done, click next to record the submission.
         </p>
 
-        <label
+        <RadioCard
           v-for="estimation in estimationOptions"
           :key="estimation"
-          :for="`${estimation}`"
-          class="estimation-option flex rounded-lg border-2 p-3 gap-3 cursor-pointer items-center transition-all duration-200 ease-in-out"
-          :class="{
-            'estimation-option--selected': selectedEstimation === estimation,
-            'estimation-option--unselected': selectedEstimation !== estimation,
-          }"
+          v-model="selectedEstimation"
+          :input-id="`${estimation}`"
+          name="estimation"
+          :value="estimation"
         >
-          <RadioButton
-            v-model="selectedEstimation"
-            :inputId="`${estimation}`"
-            name="dynamic"
-            :value="estimation"
-          />
           <p class="text-lg font-medium">{{ estimation }}</p>
-        </label>
+        </RadioCard>
       </div>
     </div>
     <div
       v-if="story"
-      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-surface-0 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-700"
+      class="fixed flex items-center justify-end p-5 w-full bottom-0 h-24 bg-[var(--color-surface)] border-t-2 border-(--color-border)"
     >
       <div class="flex justify-between w-full">
         <div>
@@ -314,66 +307,3 @@ function goToPreviousStory() {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Estimation option base styles - Default light theme */
-.estimation-option {
-  border-color: var(--color-border);
-  background-color: var(--color-surface);
-}
-
-.estimation-option--unselected {
-  border-color: var(--color-border);
-}
-
-.estimation-option--unselected:hover {
-  background-color: var(--color-surface-variant);
-  border-color: var(--color-accent);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.estimation-option--selected {
-  background-color: var(--color-surface-variant);
-  border-color: var(--color-accent);
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-accent) 20%, transparent);
-}
-
-.estimation-option--selected:hover {
-  background-color: var(--color-surface-variant);
-  border-color: var(--color-accent);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 25%, transparent);
-}
-
-/* Dark mode uses the same custom properties which are redefined for dark themes */
-:global(.dark) .estimation-option,
-:global(.p-dark) .estimation-option {
-  background-color: var(--color-surface);
-  border-color: var(--color-border);
-}
-
-:global(.dark) .estimation-option--unselected,
-:global(.p-dark) .estimation-option--unselected {
-  border-color: var(--color-border);
-}
-
-:global(.dark) .estimation-option--unselected:hover,
-:global(.p-dark) .estimation-option--unselected:hover {
-  background-color: var(--color-surface-variant);
-  border-color: var(--color-accent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-:global(.dark) .estimation-option--selected,
-:global(.p-dark) .estimation-option--selected {
-  background-color: var(--color-surface-variant);
-  border-color: var(--color-accent);
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-accent) 30%, transparent);
-}
-
-:global(.dark) .estimation-option--selected:hover,
-:global(.p-dark) .estimation-option--selected:hover {
-  background-color: var(--color-surface-variant);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 35%, transparent);
-}
-</style>

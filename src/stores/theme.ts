@@ -5,6 +5,22 @@ import { useUserStore } from '@/stores/user'
 import { darkThemes, lightThemes, type DarkThemeKey, type LightThemeKey } from '@/config/themes'
 import { darkThemePresets, lightThemePresets } from '@/config/primeVueThemes'
 
+// Default theme constants
+const DEFAULT_DARK_THEME: DarkThemeKey = 'midnightSage'
+const DEFAULT_LIGHT_THEME: LightThemeKey = 'mintFresh'
+
+// Theme CSS variables to manage
+const THEME_CSS_VARS = [
+  '--color-background',
+  '--color-surface',
+  '--color-surface-variant',
+  '--color-text-primary',
+  '--color-text-secondary',
+  '--color-accent',
+  '--color-accent-secondary',
+  '--color-border',
+] as const
+
 export const useThemeStore = defineStore('theme', () => {
   const root = document.getElementsByTagName('html')[0]
   const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)')
@@ -13,6 +29,23 @@ export const useThemeStore = defineStore('theme', () => {
   const currentDarkTheme = ref<DarkThemeKey | null>(null)
   const currentLightTheme = ref<LightThemeKey | null>(null)
   const userStore = useUserStore()
+
+  // Helper: Generate theme class name from key
+  function generateThemeClassName(mode: 'dark' | 'light', themeKey: string): string {
+    return `${mode}-theme-${themeKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`
+  }
+
+  // Helper: Remove all theme variant classes for a given mode
+  function removeAllThemeClasses(mode: 'dark' | 'light') {
+    const themes = mode === 'dark' ? darkThemes : lightThemes
+    const classNames = Object.keys(themes).map((key) => generateThemeClassName(mode, key))
+    root.classList.remove(...classNames)
+  }
+
+  // Helper: Reset theme CSS variables to defaults
+  function resetThemeVariables() {
+    THEME_CSS_VARS.forEach((varName) => root.style.removeProperty(varName))
+  }
 
   function setSystemTheme() {
     if (prefersDarkTheme.matches) {
@@ -26,17 +59,11 @@ export const useThemeStore = defineStore('theme', () => {
 
   function applyDarkThemeVariant(themeKey: DarkThemeKey | null) {
     // Remove all dark theme variant classes
-    root.classList.remove(
-      'dark-theme-deep-forest',
-      'dark-theme-midnight-sage',
-      'dark-theme-slate-lime',
-      'dark-theme-neon-noir',
-    )
+    removeAllThemeClasses('dark')
 
     // Add the specific dark theme class if provided
     if (themeKey) {
-      const className = `dark-theme-${themeKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`
-      root.classList.add(className)
+      root.classList.add(generateThemeClassName('dark', themeKey))
       currentDarkTheme.value = themeKey
 
       // Update CSS variables for Tailwind
@@ -55,30 +82,17 @@ export const useThemeStore = defineStore('theme', () => {
     } else {
       currentDarkTheme.value = null
       // Reset CSS variables to default when no specific theme is selected
-      root.style.removeProperty('--color-background')
-      root.style.removeProperty('--color-surface')
-      root.style.removeProperty('--color-surface-variant')
-      root.style.removeProperty('--color-text-primary')
-      root.style.removeProperty('--color-text-secondary')
-      root.style.removeProperty('--color-accent')
-      root.style.removeProperty('--color-accent-secondary')
-      root.style.removeProperty('--color-border')
+      resetThemeVariables()
     }
   }
 
   function applyLightThemeVariant(themeKey: LightThemeKey | null) {
     // Remove all light theme variant classes
-    root.classList.remove(
-      'light-theme-spring-meadow',
-      'light-theme-mint-fresh',
-      'light-theme-limelight',
-      'light-theme-forest-light',
-    )
+    removeAllThemeClasses('light')
 
     // Add the specific light theme class if provided
     if (themeKey) {
-      const className = `light-theme-${themeKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`
-      root.classList.add(className)
+      root.classList.add(generateThemeClassName('light', themeKey))
       currentLightTheme.value = themeKey
 
       // Update CSS variables for Tailwind
@@ -97,14 +111,7 @@ export const useThemeStore = defineStore('theme', () => {
     } else {
       currentLightTheme.value = null
       // Reset CSS variables to default when no specific theme is selected
-      root.style.removeProperty('--color-background')
-      root.style.removeProperty('--color-surface')
-      root.style.removeProperty('--color-surface-variant')
-      root.style.removeProperty('--color-text-primary')
-      root.style.removeProperty('--color-text-secondary')
-      root.style.removeProperty('--color-accent')
-      root.style.removeProperty('--color-accent-secondary')
-      root.style.removeProperty('--color-border')
+      resetThemeVariables()
     }
   }
 
@@ -114,12 +121,8 @@ export const useThemeStore = defineStore('theme', () => {
 
     // Apply the user's preferred dark theme variant if they have one
     const user = userStore.currentUser
-    if (user?.dark_theme) {
-      applyDarkThemeVariant(user.dark_theme as DarkThemeKey)
-    } else {
-      // Default to Midnight Sage when no specific theme is set
-      applyDarkThemeVariant('midnightSage')
-    }
+    const themeVariant = (user?.dark_theme as DarkThemeKey) || DEFAULT_DARK_THEME
+    applyDarkThemeVariant(themeVariant)
   }
 
   function setLightTheme() {
@@ -130,12 +133,8 @@ export const useThemeStore = defineStore('theme', () => {
 
     // Apply the user's preferred light theme variant if they have one
     const user = userStore.currentUser
-    if (user?.light_theme) {
-      applyLightThemeVariant(user.light_theme as LightThemeKey)
-    } else {
-      // Default to Mint Fresh when no specific theme is set
-      applyLightThemeVariant('mintFresh')
-    }
+    const themeVariant = (user?.light_theme as LightThemeKey) || DEFAULT_LIGHT_THEME
+    applyLightThemeVariant(themeVariant)
   }
 
   async function setAppTheme() {
