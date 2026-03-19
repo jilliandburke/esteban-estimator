@@ -8,7 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AlertBanner: typeof import('./src/components/AlertBanner.vue')['default']
     Avatar: typeof import('primevue/avatar')['default']
     Button: typeof import('primevue/button')['default']
     Card: typeof import('primevue/card')['default']
@@ -24,9 +23,7 @@ declare module 'vue' {
     Image: typeof import('primevue/image')['default']
     InputGroup: typeof import('primevue/inputgroup')['default']
     InputGroupAddon: typeof import('primevue/inputgroupaddon')['default']
-    InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
-    InviteUser: typeof import('./src/components/dialogs/InviteUser.vue')['default']
     Menu: typeof import('primevue/menu')['default']
     Menubar: typeof import('primevue/menubar')['default']
     Message: typeof import('primevue/message')['default']
@@ -34,7 +31,7 @@ declare module 'vue' {
     NewTeam: typeof import('./src/components/dialogs/NewTeam.vue')['default']
     Panel: typeof import('primevue/panel')['default']
     ProgressSpinner: typeof import('primevue/progressspinner')['default']
-    RadioButton: typeof import('primevue/radiobutton')['default']
+    RadioCard: typeof import('./src/components/RadioCard.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScrollPanel: typeof import('primevue/scrollpanel')['default']
