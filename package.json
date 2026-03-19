@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p \"build-only {@}\" --",
-    "build2": "vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
